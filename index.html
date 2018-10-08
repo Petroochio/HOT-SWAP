@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <style>
+      canvas {
+        background: black;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Clement Check Out Electron!</h1>
+    <canvas width=600 height=300></canvas>
+  </body>
+
+  <script>
+    // These need to be imported here so that the compiled code can use it
+    // BC i'm weird and wanted to use babel... :P
+    const SerialPort = require('serialport');
+    const DelimiterParser = require('@serialport/parser-delimiter');
+
+    require('./build/app.js');
+  </script>
+</html>

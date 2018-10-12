@@ -27,7 +27,7 @@ void setup() {
 
 void loop() {
   for (int chan=0; chan<8; chan++) {
-    Serial.print(adc1.readADC(chan)); Serial.print("\t");
+    Serial.print(adc1.readADC(chan)); Serial.print(" ");
   }
   
 //  for (int chan=0; chan<8; chan++) {

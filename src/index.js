@@ -1,17 +1,15 @@
-import R from 'ramda';
+import { pipe, map, split } from 'ramda';
 import xs from 'xstream';
 
 import SerialProducer from './SerialProducer';
 import { init } from './GameManager';
 
-// const serial = new SerialProducer();
+const serial = new SerialProducer();
 
-// xs.create(serial)
-//   .map(d => d.toString())
-//   .subscribe({
-//     next: x => console.log(x),
-//     error: x => console.log(x),
-//     complete: x => console.log(x),
-//   });
+// HEY PETER SEPARATE EACH INPUT WITH A - IN THE THING
+const input$ = xs.create(serial)
+  .map(d => d.toString())
+  .map(split(':'))
+  .map(map(pipe(split(' '), map(parseInt))));
 
-window.onload = init();
+window.onload = init(input$);

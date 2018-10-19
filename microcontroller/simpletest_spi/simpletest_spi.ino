@@ -13,6 +13,9 @@ Adafruit_MCP3008 adc1;
 
 int count = 0;
 
+// sck (clk), mosi (dout), miso (din), cs (chip select)
+// 13         11           12          10
+
 void setup() {
   Serial.begin(9600);
   while (!Serial);

@@ -14,7 +14,7 @@ class SerialProducer {
     SerialPort.list()
       // find the good port
       // we should maybe mess with the config on our arduinos for this
-      .then(find(p => p.productId === '6015'))
+      .then(find(p => p.productId === '8037'))
       // to do error handling controller not being there
       .then(portInfo => new SerialPort(portInfo.comName)
         .pipe(new DelimiterParser({ delimiter: '-' })))

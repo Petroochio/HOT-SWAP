@@ -56,7 +56,7 @@ function update(dt) {
 function draw(ctx) {
   const size = this.size * this.worldSize;
   ctx.save();
-  ctx.fillStyle = (this.type === 'player') ? 'white' : 'black';
+  ctx.fillStyle = (this.type === 'player') ? 'white' : 'rgb(50, 0, 0)';
   ctx.strokeStyle = 'white';
   ctx.translate(...this.position);
   ctx.rotate(Math.atan2(this.forward[1], this.forward[0]) + Math.PI / 4);

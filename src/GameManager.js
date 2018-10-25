@@ -117,7 +117,7 @@ function update(currentTime) {
     document.querySelector('#score').innerHTML = score;
     return;
   }
-
+  if (prevTime === 0) prevTime = currentTime;
   const dt = currentTime - prevTime;
   prevTime = currentTime;
   totalTime += dt;
@@ -279,7 +279,7 @@ export function init(input$) {
     // calibration
     .map(([x, y]) => ([x - 455, y - 450]))
     // deadzone
-    .filter(([x, y]) => ((x > 20 || x < -20) && (y > 20 || y < -20)))
+    .filter(([x, y]) => ((x > 10 || x < -10) && (y > 10 || y < -10)))
     // Smoothing
     // merge the last 10 values
     .fold(

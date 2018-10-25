@@ -33,7 +33,7 @@ function update(dt) {
 function draw(ctx) {
   const size = this.xMax * this.size;
   ctx.save();
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = 'rgb(50, 0, 0)';
   ctx.strokeStyle = 'white';
   ctx.lineWidth = 2;
   ctx.translate(...this.position);

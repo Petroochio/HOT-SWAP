@@ -13,6 +13,7 @@ function Tank(initialPos, turretColor, treadColor, worldWidth, worldHeight) {
   this.speed = 0.2;
   this.size = 0.03;
   this.hitRadius = 0.025;
+  this.type = 'player';
 }
 
 function getWorldHitRadius() {
@@ -86,7 +87,7 @@ function draw(ctx) {
   const size = this.size * this.xMax;
   ctx.save();
   ctx.strokeStyle = 'white';
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = 'rgb(50, 0, 0)';
 
   ctx.translate(this.position[0], this.position[1]);
 
@@ -124,7 +125,7 @@ function draw(ctx) {
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = 'rgb(50, 0, 0)';
   hubPath(ctx, size);
   ctx.fill();
   ctx.closePath();

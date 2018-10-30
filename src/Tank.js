@@ -135,13 +135,22 @@ function draw(ctx) {
   ctx.fillStyle = 'white';
   // Show move vector
   ctx.beginPath();
-  ctx.arc(this.forward[0] * size * 1.4, this.forward[1] * size * 1.4, size / 14, 0, 2 * Math.PI);
+  ctx.arc(
+    this.forward[0] * size * 1.4,
+    this.forward[1] * size * 1.4,
+    size / 14, 0,
+    2 * Math.PI
+  );
   ctx.fill();
   ctx.closePath();
 
   ctx.beginPath();
   ctx.lineWidth = 1;
-  ctx.arc(this.targetForward[0] * size * 1.4, this.targetForward[1] * size * 1.4, size / 9, 0, 2 * Math.PI);
+  ctx.arc(
+    this.targetForward[0] * size * 1.4,
+    this.targetForward[1] * size * 1.4,
+    size / 9, 0, 2 * Math.PI
+  );
   ctx.stroke();
   ctx.closePath();
 

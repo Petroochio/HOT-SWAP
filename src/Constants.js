@@ -15,6 +15,11 @@ export const KEYS = {
   SPACE: 32,
 };
 
+export const GAME_TYPES = {
+  PLAYER: 'PLAYER',
+};
+
 export default {
   KEYS,
+  GAME_TYPES,
 };

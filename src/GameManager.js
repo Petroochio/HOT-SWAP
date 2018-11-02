@@ -18,16 +18,16 @@ const enemySpawnThreshold = 10200;
 // dont create a new array every frame
 let enemies = [];
 
+const WORLD_SIZE = 100;
+
 const scene = new THREE.Scene();
 // Maybe attach this to player
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 10;
-camera.lookAt(new THREE.Vector3(0,0,0));
 
 const renderer = new THREE.WebGLRenderer();
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights
-const worldGeo = new THREE.SphereGeometry(5, 32, 32);
+const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);
 const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xa0a0a0 });
 const world = new THREE.Mesh(worldGeo, worldMat);
 scene.add(world);
@@ -37,7 +37,7 @@ const light2 = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(light);
 scene.add(light2);
 
-const player = new Player(scene, camera);
+const player = new Player(scene, camera, WORLD_SIZE);
 
 function startShake(time, intensity) {
   isShaking = true;
@@ -107,11 +107,15 @@ export function init(input$) {
   document.body.appendChild(renderer.domElement);
   resize();
 
+  window.onkeypress = (e) => {
+    console.log(e.keyCode);
+    // I made constants for this specific reason :(
+    if (e.keyCode === 97) {
+      player.addForward(-0.1);
+    } else if (e.keyCode === 100) {
+      player.addForward(0.1);
+    }
+  };
+
   playListener();
-  // window.onkeypress = (e) => {
-  //   // I made constants for this specific reason :(
-  //   if (e.keyCode === 32 && isGameOver) {
-  //     playListener();
-  //   }
-  // };
 }

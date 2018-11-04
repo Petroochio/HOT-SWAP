@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import Player from './Player';
+import Player from './Actors/Player';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -24,7 +24,6 @@ const scene = new THREE.Scene();
 
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
-// const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 const cameraScale = 7;
 const camera = new THREE.OrthographicCamera(
   window.innerWidth / (-cameraScale),
@@ -36,6 +35,7 @@ const camera = new THREE.OrthographicCamera(
 );
 
 const renderer = new THREE.WebGLRenderer();
+renderer.setPixelRatio(window.devicePixelRatio);
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights
 const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);

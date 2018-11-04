@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { GAME_TYPES } from './Constants';
+import { GAME_TYPES } from '../Constants';
 // maybe use this only in one spot so I
 // can do the loading screen thing
-import { getModel } from './AssetManager';
+import { getModel } from '../AssetManager';
 
 class Player {
   constructor(scene, camera, worldSize) {

@@ -18,11 +18,22 @@ const enemySpawnThreshold = 10200;
 // dont create a new array every frame
 let enemies = [];
 
-const WORLD_SIZE = 100;
+const WORLD_SIZE = 300;
 
 const scene = new THREE.Scene();
-// Maybe attach this to player
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+// Possibly make this a class so I can do that sweet tween
+// find a good number for this
+// const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+const cameraScale = 7;
+const camera = new THREE.OrthographicCamera(
+  window.innerWidth / (-cameraScale),
+  window.innerWidth / cameraScale,
+  window.innerHeight / cameraScale,
+  window.innerHeight / (-cameraScale),
+  -100,
+  1000
+);
 
 const renderer = new THREE.WebGLRenderer();
 // Make world a class that just holds the globe and maybe some clouds, land?
@@ -31,24 +42,23 @@ const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);
 const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xa0a0a0 });
 const world = new THREE.Mesh(worldGeo, worldMat);
 scene.add(world);
-// Maybe use some ambient light so I don't gotta do this shit
+
+// tweak lighting later
 const light = new THREE.DirectionalLight(0xffffff, 1);
-const light2 = new THREE.AmbientLight(0xffffff, 0.5);
+const light2 = new THREE.AmbientLight(0xffffff, 0.2);
 scene.add(light);
 scene.add(light2);
 
 const player = new Player(scene, camera, WORLD_SIZE);
 
+// rework this to move div, or at least the implementation
+// possibly just shake the camera
 function startShake(time, intensity) {
   isShaking = true;
   shakeTimer = time;
   shakeIntensity = intensity;
   shakeXScale = Math.random() > 0.5 ? 1 : -1;
   shakeYScale = Math.random() > 0.5 ? 1 : -1;
-}
-
-function render() {
-  renderer.render(scene, camera);
 }
 
 function update(currentTime) {
@@ -76,7 +86,8 @@ function update(currentTime) {
   // world.rotation.x += 0.0001 * dt;
   // world.rotation.y += 0.0001 * dt;
 
-  render();
+  // Rendering is so much simpler with THREE than Canvas
+  renderer.render(scene, camera);
   requestAnimationFrame(update.bind(this));
 }
 
@@ -107,13 +118,19 @@ export function init(input$) {
   document.body.appendChild(renderer.domElement);
   resize();
 
-  window.onkeypress = (e) => {
-    console.log(e.keyCode);
+  window.onkeydown = (e) => {
     // I made constants for this specific reason :(
-    if (e.keyCode === 97) {
-      player.addForward(-0.1);
-    } else if (e.keyCode === 100) {
-      player.addForward(0.1);
+    if (e.keyCode === 37) {
+      player.setTurnAngle(0.5);
+    } else if (e.keyCode === 39) {
+      player.setTurnAngle(-0.5);
+    }
+  };
+
+  window.onkeyup = (e) => {
+    // I made constants for this specific reason :(
+    if (e.keyCode === 37 || e.keyCode === 39) {
+      player.setTurnAngle(0);
     }
   };
 

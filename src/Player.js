@@ -1,60 +1,87 @@
 import * as THREE from 'three';
 import { GAME_TYPES } from './Constants';
+// maybe use this only in one spot so I
+// can do the loading screen thing
+import { getModel } from './AssetManager';
 
 class Player {
   constructor(scene, camera, worldSize) {
     this.type = GAME_TYPES.PLAYER;
     // move camera to a class that looks at the player
     this.camera = camera;
-    // theta, something
-    this.position = [1.57, 0.1];
-    this.forward = [0, 1];
-    this.speed = 0.0005;
-    // temp geo
-    const worldGeo = new THREE.SphereGeometry(1, 10, 10);
-    const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
-    const world = new THREE.Mesh(worldGeo, worldMat);
-    this.gameObject = world;
+    this.turnRate = 0;
+    this.speed = 0.005 / worldSize; // scaled to world size bc rotation
 
-    const nubGeo = new THREE.SphereGeometry(0.5, 10, 10);
-    const nubMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
-    const nub = new THREE.Mesh(nubGeo, nubMat);
-    // this.position.z = 0.01;
-    this.gameObject = world;
-    this.gameObject.add(nub);
-    this.gameObject.position.x = worldSize;
+    // Set it to be on the edge of the world
+    this.gameObject = new THREE.Object3D();
+    this.gameObject.position.x = worldSize - 4;
     this.gameObject.rotateZ(-Math.PI / 2);
-    // Set camera to follow player nice
+    this.gameObject.rotateX(-Math.PI / 2);
+
+    // ship body
+    // this mat might need to change
+    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
+    const sailMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaaaaaa });
+    getModel('./Assets/pirate_body.stl')
+      .then((geo) => {
+        this.body = new THREE.Mesh(geo, bodyMat);
+        this.gameObject.add(this.body);
+      });
+
+    getModel('./Assets/pirate_frontsail.stl')
+      .then((geo) => {
+        this.frontSail = new THREE.Mesh(geo, sailMat);
+        this.frontSail.position.x = 2.07;
+        this.frontSail.position.y = 18.80;
+        this.frontSail.rotateY(0.3);
+        this.gameObject.add(this.frontSail);
+      });
+
+    getModel('./Assets/pirate_backsail.stl')
+      .then((geo) => {
+        this.backSail = new THREE.Mesh(geo, sailMat);
+        this.backSail.position.x = 2.16;
+        this.backSail.position.y = 7.29;
+        this.backSail.rotateY(0.25);
+        this.gameObject.add(this.backSail);
+      });
+
+    getModel('./Assets/pirate_rudder.stl')
+      .then((geo) => {
+        this.rudder = new THREE.Mesh(geo, sailMat);
+        // this.rudder.position.x = 2.16;
+        this.rudder.position.y = -8.18;
+        this.gameObject.add(this.rudder);
+      });
+    // Set camera to follow player nice, values set manually
     this.camera = camera;
     this.gameObject.add(this.camera);
-    this.camera.position.z = 20;
-    this.camera.position.y = 20;
-    this.camera.rotateX(-0.5);
-    // this.camera.lookAt(new THREE.Vector3(0, world, 0));
+    this.camera.position.z = 10;
+    this.camera.position.y = 22;
+    this.camera.rotateX(0.9);
 
+    // Avoid gimble lock with two rotation spheres
     this.moveSphereX = new THREE.Object3D();
     this.moveSphereY = new THREE.Object3D();
     this.moveSphereX.add(this.moveSphereY);
     this.moveSphereY.add(this.gameObject);
+
+    // Add top level obj to scene
     scene.add(this.moveSphereX);
   }
 
-  // find a better name bc these are angles
-  addForward(x, y) {
-    const newX = x + this.forward[0];
-    const newY = y + this.forward[1];
-    const mag = Math.sqrt((newX * newX) + (newY * newY));
-
-    this.forward = [
-      newX / mag,
-      newY / mag,
-    ];
-    this.moveSphereX.rotateX(x);
+  setTurnAngle(angle) {
+    this.turnRate = angle / 6000;
+    this.rudder.rotation.z = -angle;
   }
 
   update(dt) {
-    // this.moveSphereX.rotateX(this.forward[0] * dt * this.speed);
     // always moving forward
+    console.log(this.turnRate * dt);
+    // switch to acceleration and velocity with a max speed
+    if (this.speed > 0) {
+      this.moveSphereX.rotateX(this.turnRate * dt);
+    }
     this.moveSphereY.rotateY(1 * dt * this.speed);
   }
 }

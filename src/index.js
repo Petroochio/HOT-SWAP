@@ -4,6 +4,7 @@ import xs from 'xstream';
 import SerialProducer from './SerialProducer';
 import { init, resize } from './GameManager';
 
+// create serial port and open connection
 const serial = new SerialProducer();
 
 const input$ = xs.create(serial)

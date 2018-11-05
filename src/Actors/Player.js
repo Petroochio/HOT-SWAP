@@ -10,13 +10,15 @@ class Player {
     // move camera to a class that looks at the player
     this.camera = camera;
     this.turnRate = 0;
-    this.speed = 0.01 / worldSize; // scaled to world size bc rotation
+    this.speed = 0.03 / worldSize; // scaled to world size bc rotation
+    this.rotPosition = 0;
+    this.forwardAxis = new THREE.Vector3(0, 0, 1);
+    this.yawAxis = new THREE.Vector3(1, 0, 0);
 
     // Set it to be on the edge of the world
     this.gameObject = new THREE.Object3D();
     this.gameObject.position.x = worldSize - 4;
-    this.gameObject.rotateZ(-Math.PI / 2);
-    this.gameObject.rotateX(-Math.PI / 2);
+    this.gameObject.rotateY(Math.PI / 2);
 
     // ship body
     // this mat might need to change
@@ -53,6 +55,7 @@ class Player {
         this.rudder.position.y = -8.18;
         this.gameObject.add(this.rudder);
       });
+
     // Set camera to follow player nice, values set manually
     this.camera = camera;
     this.gameObject.add(this.camera);
@@ -61,27 +64,38 @@ class Player {
     this.camera.rotateX(0.9);
 
     // Avoid gimble lock with two rotation spheres
-    this.moveSphereX = new THREE.Object3D();
-    this.moveSphereY = new THREE.Object3D();
-    this.moveSphereX.add(this.moveSphereY);
-    this.moveSphereY.add(this.gameObject);
+    this.moveSphere = new THREE.Object3D();
+    this.moveSphere.add(this.gameObject);
 
     // Add top level obj to scene
-    scene.add(this.moveSphereX);
+    scene.add(this.moveSphere);
   }
 
   setTurnAngle(angle) {
-    this.turnRate = angle / 6000;
-    this.rudder.rotation.z = -angle;
+    this.turnRate = angle;
+    this.rudder.rotation.z = angle * 1000;
   }
 
   update(dt) {
     // always moving forward
     // switch to acceleration and velocity with a max speed
-    if (this.speed > 0) {
-      this.moveSphereX.rotateX(this.turnRate * dt);
+    if (this.speed > 0 && this.turnRate !== 0) {
+      // if turning apply yaw to forward
+      // this.moveSphere.rotateX(this.turnRate * 2 * dt);
+      console.log(this.turnRate);
+      // this.forwardAxis.applyAxisAngle(this.yawAxis, this.turnRate * dt);
+      this.moveSphere.rotateOnAxis(this.yawAxis, this.turnRate * dt);
     }
-    this.moveSphereY.rotateY(dt * this.speed);
+    // apply rotspeed to move sphere based on forward
+    this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.speed);
+    // this.yawAxis.applyAxisAngle(this.forwardAxis, dt * this.speed);
+    // this.moveSphere.rotateY(dt * this.speed);
+    // apply forward to yaw
+    // console.log(this.yawAxis.x, this.yawAxis.y, this.yawAxis.z);
+
+    // const quaternion = new THREE.Quaternion();
+    // quaternion.setFromAxisAngle(this.yawAxis, 0.01);
+    // this.forwardAxis.applyQuaternion(quaternion);
   }
 }
 

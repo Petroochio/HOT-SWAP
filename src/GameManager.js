@@ -44,13 +44,18 @@ renderer.setPixelRatio(window.devicePixelRatio);
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights
 const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);
-const worldMat = new THREE.MeshPhongMaterial({ flatShading: false, color: 0xa0a0a0 });
+const worldMat = new THREE.MeshBasicMaterial({ wireframe: true });
+const world2Geo = new THREE.SphereGeometry(WORLD_SIZE - 2, 32, 32);
+const world2Mat = new THREE.MeshBasicMaterial({ color: 0x303030 });
+// new THREE.MeshPhongMaterial({ flatShading: false, color: 0xa0a0a0 });
 const world = new THREE.Mesh(worldGeo, worldMat);
+const world2 = new THREE.Mesh(world2Geo, world2Mat);
 scene.add(world);
+scene.add(world2);
 
 // tweak lighting later
 const light = new THREE.DirectionalLight(0xffffff, 1);
-const light2 = new THREE.AmbientLight(0xffffff, 0.2);
+const light2 = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(light);
 scene.add(light2);
 
@@ -130,9 +135,9 @@ export function init(input$) {
   window.onkeydown = (e) => {
     // I made constants for this specific reason :(
     if (e.keyCode === 37) {
-      player.setTurnAngle(0.5);
+      player.setTurnAngle(0.0004);
     } else if (e.keyCode === 39) {
-      player.setTurnAngle(-0.5);
+      player.setTurnAngle(-0.0004);
     }
   };
 

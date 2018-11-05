@@ -10,7 +10,7 @@ class Player {
     // move camera to a class that looks at the player
     this.camera = camera;
     this.turnRate = 0;
-    this.speed = 0.005 / worldSize; // scaled to world size bc rotation
+    this.speed = 0.01 / worldSize; // scaled to world size bc rotation
 
     // Set it to be on the edge of the world
     this.gameObject = new THREE.Object3D();

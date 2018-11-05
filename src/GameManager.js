@@ -44,7 +44,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights
 const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);
-const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xa0a0a0 });
+const worldMat = new THREE.MeshPhongMaterial({ flatShading: false, color: 0xa0a0a0 });
 const world = new THREE.Mesh(worldGeo, worldMat);
 scene.add(world);
 
@@ -145,7 +145,7 @@ export function init(input$) {
     if (e.keyCode === 32) {
       const cannonball = cannonballPool.find(b => !b.isActive);
       if (cannonball) {
-        cannonball.fire(player.moveSphereX.rotation.x, player.moveSphereY.rotation.y);
+        cannonball.fire(player.moveSphereX.rotation.x + 1, player.moveSphereY.rotation.y);
       }
     }
   };

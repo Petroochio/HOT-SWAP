@@ -7,6 +7,7 @@ class Cannonball {
     this.isActive = false;
     this.scene = scene;
     this.speed = 0.1 / worldSize;
+    this.accelCounter = 1000;
 
     // maybe scale it up after it fires
     const ballGeo = new THREE.SphereGeometry(3, 32, 32);
@@ -25,6 +26,7 @@ class Cannonball {
 
   fire(xrot, yrot) {
     this.isActive = true;
+    this.accelCounter = 300;
     // Add top level obj to scene
     // I'll need to remove it when it dies
     this.moveSphereX.rotation.x = xrot;
@@ -33,7 +35,21 @@ class Cannonball {
   }
 
   update(dt) {
-    if (this.isActive) this.moveSphereY.rotateY(dt * this.speed);
+    if (this.isActive) {
+      let move = dt * this.speed;
+      // hacky fire animation code
+      if (this.accelCounter > 0) {
+        this.accelCounter -= dt;
+        move *= this.accelCounter / 100;
+        move = move < dt * this.speed ? dt * this.speed : move;
+
+        const s = (300 - this.accelCounter) / 270;
+        this.gameObject.scale.set(s, s, s);
+      } else {
+        this.gameObject.scale.set(1, 1, 1);
+      }
+      this.moveSphereY.rotateY(move);
+    }
   }
 }
 

@@ -17,6 +17,8 @@ export const KEYS = {
 
 export const GAME_TYPES = {
   PLAYER: 'PLAYER',
+  ENEMY: 'ENEMY',
+  CANNONBALL: 'CANNONBALL',
 };
 
 export default {

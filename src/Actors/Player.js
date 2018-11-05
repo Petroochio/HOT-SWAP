@@ -77,12 +77,11 @@ class Player {
 
   update(dt) {
     // always moving forward
-    console.log(this.turnRate * dt);
     // switch to acceleration and velocity with a max speed
     if (this.speed > 0) {
       this.moveSphereX.rotateX(this.turnRate * dt);
     }
-    this.moveSphereY.rotateY(1 * dt * this.speed);
+    this.moveSphereY.rotateY(dt * this.speed);
   }
 }
 

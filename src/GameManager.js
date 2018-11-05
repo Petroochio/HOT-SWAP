@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Player from './Actors/Player';
+import Cannonball from './Actors/Cannonball';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -21,6 +22,10 @@ let enemies = [];
 const WORLD_SIZE = 300;
 
 const scene = new THREE.Scene();
+const cannonballPool = Array.from(
+  { length: 100 },
+  () => new Cannonball(scene, WORLD_SIZE)
+);
 
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
@@ -74,13 +79,17 @@ function update(currentTime) {
   const dt = currentTime - prevTime;
   prevTime = currentTime;
   totalTime += dt;
+
+  player.update(dt);
+  cannonballPool.forEach(c => c.update(dt));
+
+  // old stuff?
   // Screen shake stuff
   if (isShaking) shakeTimer -= dt;
   if (isShaking && shakeTimer <= 0) isShaking = false;
 
   // Enemy spawn logic
   enemySpawnTimer += dt;
-  player.update(dt);
 
   // Spin the earth
   // world.rotation.x += 0.0001 * dt;
@@ -131,6 +140,13 @@ export function init(input$) {
     // I made constants for this specific reason :(
     if (e.keyCode === 37 || e.keyCode === 39) {
       player.setTurnAngle(0);
+    }
+
+    if (e.keyCode === 32) {
+      const cannonball = cannonballPool.find(b => !b.isActive);
+      if (cannonball) {
+        cannonball.fire(player.moveSphereX.rotation.x, player.moveSphereY.rotation.y);
+      }
     }
   };
 

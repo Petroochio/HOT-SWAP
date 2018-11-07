@@ -27,6 +27,9 @@ const cannonballPool = Array.from(
   () => new Cannonball(scene, WORLD_SIZE)
 );
 
+const portCannons = [];
+const starboardCannons = [];
+
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
 const cameraScale = 7;
@@ -96,10 +99,6 @@ function update(currentTime) {
   // Enemy spawn logic
   enemySpawnTimer += dt;
 
-  // Spin the earth
-  // world.rotation.x += 0.0001 * dt;
-  // world.rotation.y += 0.0001 * dt;
-
   // Rendering is so much simpler with THREE than Canvas
   renderer.render(scene, camera);
   requestAnimationFrame(update.bind(this));
@@ -150,7 +149,20 @@ export function init(input$) {
     if (e.keyCode === 32) {
       const cannonball = cannonballPool.find(b => !b.isActive);
       if (cannonball) {
-        cannonball.fire(player.moveSphereX.rotation.x + 1, player.moveSphereY.rotation.y);
+        cannonball.fire(
+          'STARBOARD',
+          player.moveSphere.rotation,
+          0.025,
+          0.03,
+        );
+
+        player.addRoll(-0.01);
+        // Front cannon
+        // 0.05
+        // Mid Cannon
+        // 0.025
+        // Back cannon
+        // 0
       }
     }
   };

@@ -27,17 +27,18 @@ class Player {
     // ship body
     this.ship = new THREE.Object3D();
     this.gameObject.add(this.ship);
+
     // this mat might need to change
     const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
-    const sailMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xaaaaaa });
-
-    getModel('./Assets/pirate_body.stl')
+    getModel('./Assets/pirate/pirate_body.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
         this.ship.add(this.body);
       });
 
-    getModel('./Assets/pirate_frontsail.stl')
+    // Sails
+    const sailMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xaaaaaa });
+    getModel('./Assets/pirate/pirate_frontsail.stl')
       .then((geo) => {
         this.frontSail = new THREE.Mesh(geo, sailMat);
         this.frontSail.position.x = 2.07;
@@ -46,7 +47,7 @@ class Player {
         this.ship.add(this.frontSail);
       });
 
-    getModel('./Assets/pirate_backsail.stl')
+    getModel('./Assets/pirate/pirate_backsail.stl')
       .then((geo) => {
         this.backSail = new THREE.Mesh(geo, sailMat);
         this.backSail.position.x = 2.16;
@@ -55,12 +56,37 @@ class Player {
         this.ship.add(this.backSail);
       });
 
-    getModel('./Assets/pirate_rudder.stl')
+    getModel('./Assets/pirate/pirate_rudder.stl')
       .then((geo) => {
         this.rudder = new THREE.Mesh(geo, sailMat);
         // this.rudder.position.x = 2.16;
         this.rudder.position.y = -8.18;
         this.ship.add(this.rudder);
+      });
+
+    // Cannons
+    // Map over these positions in loader to set cannon spot
+    this.portCannons = [[-2.49, 18.05, 0], [-3.49, 10.95, 0], [-2.49, 3.86, 0]];
+    this.starboardCannons = [[2.49, 18.05, 0], [3.49, 10.95, 0], [2.49, 3.86, 0]];
+    this.cannonLoadedMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    this.cannonUnloadedMat = new THREE.MeshBasicMaterial({ color: 0x777777 });
+    getModel('./Assets/pirate/pirate_cannon.stl')
+      .then((geo) => {
+        this.portCannons = this.portCannons.map((position) => {
+          const cannon = new THREE.Mesh(geo, this.cannonUnloadedMat);
+          cannon.position.set(...position);
+          this.ship.add(cannon);
+          return cannon;
+        });
+
+        this.starboardCannons = this.starboardCannons.map((position) => {
+          const cannon = new THREE.Mesh(geo, this.cannonUnloadedMat);
+          // Gotta flip the model
+          cannon.rotateZ(Math.PI);
+          cannon.position.set(...position);
+          this.ship.add(cannon);
+          return cannon;
+        });
       });
 
     // Set camera to follow player nice, values set manually

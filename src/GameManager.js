@@ -1,6 +1,8 @@
 import * as THREE from 'three';
+
 import Player from './Actors/Player';
 import Cannonball from './Actors/Cannonball';
+import { getModel } from './AssetManager';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -43,24 +45,21 @@ const camera = new THREE.OrthographicCamera(
 );
 
 const renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(0x000033, 1);
 renderer.setPixelRatio(window.devicePixelRatio);
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights
-const worldGeo = new THREE.SphereGeometry(WORLD_SIZE, 32, 32);
-const worldMat = new THREE.MeshBasicMaterial({ wireframe: true });
-const world2Geo = new THREE.SphereGeometry(WORLD_SIZE - 2, 32, 32);
-const world2Mat = new THREE.MeshBasicMaterial({ color: 0x303030 });
-// new THREE.MeshPhongMaterial({ flatShading: false, color: 0xa0a0a0 });
-const world = new THREE.Mesh(worldGeo, worldMat);
-const world2 = new THREE.Mesh(world2Geo, world2Mat);
-scene.add(world);
-scene.add(world2);
+
+const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x55ffcc });
+let world;
+getModel('./Assets/world.stl')
+  .then((geo) => {
+    world = new THREE.Mesh(geo, worldMat);
+    world.scale.set(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE);
+    scene.add(world);
+  });
 
 // tweak lighting later
-const light = new THREE.DirectionalLight(0xffffff, 1);
-const light2 = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(light);
-scene.add(light2);
 
 const player = new Player(scene, camera, WORLD_SIZE);
 

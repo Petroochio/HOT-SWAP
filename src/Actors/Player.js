@@ -29,7 +29,8 @@ class Player {
     this.gameObject.add(this.ship);
     // this mat might need to change
     const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
-    const sailMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaaaaaa });
+    const sailMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xaaaaaa });
+
     getModel('./Assets/pirate_body.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
@@ -69,6 +70,10 @@ class Player {
     this.camera.position.y = 22;
     this.camera.rotateX(0.9);
 
+    const light = new THREE.PointLight(0xffffff, 1, 100000);
+    this.gameObject.add(light);
+    light.position.set(0, -20, 200);
+
     // Avoid gimble lock with two rotation spheres
     this.moveSphere = new THREE.Object3D();
     this.moveSphere.add(this.gameObject);
@@ -79,7 +84,10 @@ class Player {
 
   setTurnAngle(angle) {
     this.turnRate = angle;
-    this.rudder.rotation.z = angle * 1000;
+    this.rudder.rotation.z = -angle * 1000;
+    // tween this
+    // and add a roll
+    this.ship.rotation.z = angle * 100;
   }
 
   addRoll(impulse) {

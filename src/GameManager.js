@@ -3,11 +3,15 @@ import * as THREE from 'three';
 import Player from './Actors/Player';
 import Cannonball from './Actors/Cannonball';
 import { getModel } from './AssetManager';
+import EnemyShip from './Actors/EnemyShip';
+import { GAME_TYPES } from './Constants';
 
 let prevTime = 0;
 let totalTime = 0;
 let score = 0;
 let isGameOver = true;
+// Use this to give players grace period at start
+let canSpawn = true;
 
 // Screen shake for juice
 let isShaking = false;
@@ -16,21 +20,24 @@ let shakeIntensity = 4;
 let shakeXScale = 0;
 let shakeYScale = 0;
 
-let enemySpawnTimer = 0; // start negative to give more time to adapt
-const enemySpawnThreshold = 10200;
-// dont create a new array every frame
-let enemies = [];
-
 const WORLD_SIZE = 300;
 
 const scene = new THREE.Scene();
 const cannonballPool = Array.from(
-  { length: 100 },
+  { length: 150 },
   () => new Cannonball(scene, WORLD_SIZE)
 );
 
-const portCannons = [];
-const starboardCannons = [];
+let enemySpawnTimer = 0; // start negative to give more time to adapt
+const enemySpawnThreshold = 5200;
+// dont create a new array every frame
+const enemyPool = Array.from(
+  { length: 50 },
+  () => new EnemyShip(scene, WORLD_SIZE)
+);
+
+const portCannonAmmo = 0;
+const starboardCannonAmmo = 0;
 
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
@@ -59,8 +66,6 @@ getModel('./Assets/world.stl')
     scene.add(world);
   });
 
-// tweak lighting later
-
 const player = new Player(scene, camera, WORLD_SIZE);
 
 // rework this to move div, or at least the implementation
@@ -71,6 +76,31 @@ function startShake(time, intensity) {
   shakeIntensity = intensity;
   shakeXScale = Math.random() > 0.5 ? 1 : -1;
   shakeYScale = Math.random() > 0.5 ? 1 : -1;
+}
+
+function spawnEnemy() {
+  if (canSpawn) {
+    enemySpawnTimer = 0;
+    const enemy = enemyPool.find(e => !e.isActive);
+    // Hard cap is in the enemy pool rn ~50
+    if (enemy) enemy.spawn(player.moveSphere.rotation);
+  }
+}
+
+function checkCollisions() {
+  cannonballPool.forEach((c) => {
+    if (c.isActive) {
+      // Check if enemy is hit
+      if (c.ownerType === GAME_TYPES.PLAYER) {
+        enemyPool.forEach((e) => {
+          if (e.isActive && e.calcHit(c.getPosition(), c.hitRadius)) {
+            e.die();
+            c.explode();
+          }
+        });
+      }
+    }
+  });
 }
 
 function update(currentTime) {
@@ -88,7 +118,11 @@ function update(currentTime) {
   totalTime += dt;
 
   player.update(dt);
+  player.getWorldPosition(); // ewwww
   cannonballPool.forEach(c => c.update(dt));
+  enemyPool.forEach(e => e.update(dt, player.worldPos));
+
+  checkCollisions();
 
   // old stuff?
   // Screen shake stuff
@@ -97,6 +131,7 @@ function update(currentTime) {
 
   // Enemy spawn logic
   enemySpawnTimer += dt;
+  if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
 
   // Rendering is so much simpler with THREE than Canvas
   renderer.render(scene, camera);
@@ -108,7 +143,6 @@ function reset() {
   totalTime = 0;
   score = 0;
   isGameOver = false;
-  enemies = [];
 
   document.querySelector('#ui').className = 'hidden';
   document.querySelector('#title').className = 'hidden';
@@ -148,7 +182,7 @@ export function init(input$) {
     if (e.keyCode === 32) {
       const cannonball = cannonballPool.find(b => !b.isActive);
       if (cannonball) {
-        cannonball.fire(
+        cannonball.playerFire(
           'STARBOARD',
           player.moveSphere.rotation,
           0.025,

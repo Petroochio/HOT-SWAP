@@ -14,7 +14,7 @@ class Player {
     this.speed = 0.01 / worldSize; // scaled to world size bc rotation
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
-    this.totalRotation = 0;
+    this.worldPos = new THREE.Vector3();
 
     this.rollSpeed = 0;
     this.rollAcc = 0;
@@ -37,13 +37,12 @@ class Player {
       });
 
     // Sails
-    const sailMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xaaaaaa });
+    const sailMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xffffff, side: THREE.DoubleSide });
     getModel('./Assets/pirate/pirate_frontsail.stl')
       .then((geo) => {
         this.frontSail = new THREE.Mesh(geo, sailMat);
         this.frontSail.position.x = 2.07;
         this.frontSail.position.y = 18.80;
-        this.frontSail.rotateY(0.3);
         this.ship.add(this.frontSail);
       });
 
@@ -52,7 +51,6 @@ class Player {
         this.backSail = new THREE.Mesh(geo, sailMat);
         this.backSail.position.x = 2.16;
         this.backSail.position.y = 7.29;
-        this.backSail.rotateY(0.25);
         this.ship.add(this.backSail);
       });
 
@@ -96,9 +94,11 @@ class Player {
     this.camera.position.y = 22;
     this.camera.rotateX(0.9);
 
-    const light = new THREE.PointLight(0xffffff, 1, 100000);
+    const light = new THREE.PointLight(0xffffff, 0.5, 200000);
+    const ambient = new THREE.AmbientLight(0x505050);
     this.gameObject.add(light);
-    light.position.set(0, -20, 200);
+    this.gameObject.add(ambient);
+    light.position.set(0, -40, 100);
 
     // Avoid gimble lock with two rotation spheres
     this.moveSphere = new THREE.Object3D();
@@ -106,6 +106,11 @@ class Player {
 
     // Add top level obj to scene
     scene.add(this.moveSphere);
+  }
+
+  getWorldPosition() {
+    this.gameObject.getWorldPosition(this.worldPos);
+    return this.worldPos;
   }
 
   setTurnAngle(angle) {

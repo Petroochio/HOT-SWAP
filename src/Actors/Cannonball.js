@@ -3,8 +3,10 @@ import { GAME_TYPES } from '../Constants';
 
 class Cannonball {
   constructor(scene, worldSize) {
+    // organize these somehow?
     this.type = GAME_TYPES.CANNONBALL;
     this.ownerType = '';
+    this.worldSize = worldSize;
     this.isActive = false;
     this.scene = scene;
     this.speed = 0.07 / worldSize;
@@ -16,6 +18,8 @@ class Cannonball {
     // Used to store world position
     this.worldPos = new THREE.Vector3();
     this.hitRadius = 3;
+    this.flightTime = 0;
+    this.maxFlight = 1500;
 
     // maybe scale it up after it fires
     const ballGeo = new THREE.SphereGeometry(3, 32, 32);
@@ -36,9 +40,15 @@ class Cannonball {
     return this.worldPos;
   }
 
-  enemyFire() {
+  enemyFire(enemyRot, startOffset) {
+    this.isActive = true;
+    this.gameObject.visible = true;
+    this.accelCounter = 300;
     this.ownerType = GAME_TYPES.ENEMY;
-    console.log(this.ownerType);
+
+    this.gameObject.scale.set(0.001, 0.001, 0.001);
+    this.moveSphere.rotation.set(enemyRot.x, enemyRot.y, enemyRot.z);
+    this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
   }
 
   playerFire(side, playerRot, startOffset, cannonOffset) {
@@ -46,9 +56,10 @@ class Cannonball {
     this.gameObject.visible = true;
     this.accelCounter = 300;
     this.ownerType = GAME_TYPES.PLAYER;
+
     // Add top level obj to scene
     // I'll need to remove it when it dies
-    // this.moveSphere.rotateOnAxis(playerRot, forwardAxis);
+    this.gameObject.scale.set(0.001, 0.001, 0.001);
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
     this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
     if (side === 'PORT') {
@@ -58,15 +69,24 @@ class Cannonball {
       this.moveSphere.rotateOnAxis(this.yawAxis, -Math.PI / 2);
       this.playerAxis = new THREE.Vector3(0, -1, 0);
     }
-    console.log(this);
 
     this.moveSphere.rotateOnAxis(this.forwardAxis, cannonOffset);
   }
 
-  explode() {
-    console.log(':P');
+  reset() {
     this.isActive = false;
     this.gameObject.visible = false;
+    this.flightTime = 0;
+  }
+
+  explode() {
+    // trigger explosion animation instead
+    this.reset();
+  }
+
+  splash() {
+    // trigger splash animation instead
+    this.reset();
   }
 
   update(dt) {
@@ -80,11 +100,27 @@ class Cannonball {
 
         const s = (300 - this.accelCounter) / 270;
         this.gameObject.scale.set(s, s, s);
+        this.gameObject.position.x = this.worldSize + 4;
       } else {
+        this.flightTime += dt;
+        // calc distance from surface of water
+        const dist = (4 * (this.maxFlight - this.flightTime) / this.maxFlight);
+        this.gameObject.position.x = this.worldSize + dist;
+
+        // I want it to go below the water so I added an extra buffer here, thats the 500
+        if (this.flightTime > this.maxFlight + 500) {
+          this.splash();
+        }
+
         this.gameObject.scale.set(1, 1, 1);
       }
+
       this.moveSphere.rotateOnAxis(this.forwardAxis, move);
-      this.moveSphere.rotateOnAxis(this.playerAxis, dt * this.playerSpeed);
+
+      // add player angular speed
+      if (this.ownerType === GAME_TYPES.PLAYER) {
+        this.moveSphere.rotateOnAxis(this.playerAxis, dt * this.playerSpeed);
+      }
     }
   }
 }

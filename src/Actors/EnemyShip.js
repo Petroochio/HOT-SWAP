@@ -4,7 +4,7 @@ import { GAME_TYPES } from '../Constants';
 import { getModel } from '../AssetManager';
 
 class EnemyShip {
-  constructor(scene, worldSize) {
+  constructor(scene, worldSize, shoot) {
     this.type = GAME_TYPES.ENEMY;
     this.isActive = false;
     this.scene = scene;
@@ -12,9 +12,14 @@ class EnemyShip {
     this.accelCounter = 1000;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
+    this.shoot = shoot;
+    this.shootTimer = 0;
+    this.shootMax = 5000;
+
     // Used to calc actual world position
     this.worldPos = new THREE.Vector3();
     this.hitPos = new THREE.Vector3();
+
     // maybe scale it up after it fires
     this.gameObject = new THREE.Object3D();
     this.gameObject.position.x = worldSize - 2;
@@ -37,6 +42,7 @@ class EnemyShip {
         this.sail.position.y = 9.79;
         this.gameObject.add(this.sail);
       });
+
     // Debug stuff for hitbox
     // const debugMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, wireframe: true });
     // this.hitSphere = new THREE.Mesh(new THREE.SphereGeometry(12, 10, 10), debugMat);
@@ -100,10 +106,18 @@ class EnemyShip {
       let turn = 0;
       if (planeTest > 0.001 || planeTest < -0.001) turn = planeTest > 0 ? 1 : -1;
 
-      this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0003);
+      // hard coded turn rate at end
+      this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.00001);
 
       // maybe add another enemy that's got cannons at the side
       this.moveSphere.rotateOnAxis(this.forwardAxis, this.speed * dt);
+
+      // Cannon stuff
+      this.shootTimer += dt;
+      if (this.shootTimer >= this.shootMax) {
+        this.shootTimer = 0;
+        this.shoot(this.moveSphere.rotation);
+      }
     }
   }
 }

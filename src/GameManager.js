@@ -30,10 +30,20 @@ const cannonballPool = Array.from(
 
 let enemySpawnTimer = 0; // start negative to give more time to adapt
 const enemySpawnThreshold = 5200;
+
+// Arrow to keep scope, pass to enemy so we can share one pool
+// maybe create a separate pool for enemy and player :|
+const fireEnemyCannon = (enemyRot) => {
+  const cannonball = cannonballPool.find(b => !b.isActive);
+  if (cannonball) {
+    cannonball.enemyFire(enemyRot, 0.09);
+  }
+};
+
 // dont create a new array every frame
 const enemyPool = Array.from(
   { length: 50 },
-  () => new EnemyShip(scene, WORLD_SIZE)
+  () => new EnemyShip(scene, WORLD_SIZE, fireEnemyCannon)
 );
 
 const portCannonAmmo = 0;

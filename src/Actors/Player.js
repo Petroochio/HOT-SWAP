@@ -1,12 +1,12 @@
 import * as THREE from 'three';
-import { GAME_TYPES } from '../Constants';
+import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 // maybe use this only in one spot so I
 // can do the loading screen thing
 import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
 
 class Player {
-  constructor(scene, camera, worldSize) {
+  constructor(scene, camera, worldSize, fireCannon) {
     this.type = GAME_TYPES.PLAYER;
     // move camera to a class that looks at the player
     this.camera = camera;
@@ -18,6 +18,19 @@ class Player {
 
     this.rollSpeed = 0;
     this.rollAcc = 0;
+
+    // Fire logic
+    this.fireCannon = fireCannon;
+    // names for these need to match the constants
+    this.ammo = { PORT: 0, STARBOARD: 0 };
+    this.fuses = {
+      PORT: { lit: false, time: 0 },
+      STARBOARD: { lit: false, time: 0 },
+    };
+    this.FUSE_MAX = 1500;
+    // [back, mid, front]
+    this.CANNON_POS = [0, 0.025, 0.05];
+    this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
 
     // Set it to be on the edge of the world
     this.gameObject = new THREE.Object3D();
@@ -126,22 +139,53 @@ class Player {
     this.rollSpeed += impulse;
   }
 
-  update(dt) {
-    // always moving forward
-    // switch to acceleration and velocity with a max speed
-    if (this.speed > 0 && this.turnRate !== 0) {
-      // if turning apply yaw to forward
-      this.moveSphere.rotateOnAxis(this.yawAxis, this.turnRate * dt);
+  // Fire logic
+  loadCannon(side) {
+    // no more than 3, and don't load while fuses are lit
+    if (this.ammo[side] < 3 && !this.fuses[side].lit) {
+      this.ammo[side] += 1;
     }
-    // apply rotspeed to move sphere based on forward
-    // used for cannonballs
-    this.totalRotation += dt * this.speed;
-    this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.speed);
+  }
 
+  lightFuse(side) {
+    // don't light without ammo
+    if (this.ammo[side] > 0 && !this.fuses[side].lit) {
+      this.fuses[side].lit = true;
+      this.fuses[side].time = 0;
+    }
+  }
+
+  updateCannons(dt, side) {
+    const fuse = this.fuses[side];
+    const ammo = this.ammo[side];
+    // Player fire logic
+    if (fuse.lit) {
+      fuse.time += dt;
+      if (fuse.time > this.FUSE_MAX) {
+        if (ammo !== 0) {
+          this.fireCannon(
+            side,
+            this.moveSphere.rotation,
+            this.CANNON_POS[ammo - 1]
+          );
+          // hard coded offest btw cannon fire
+          fuse.time = this.FUSE_MAX - 130;
+          // Primitives are not passed by ref
+          this.ammo[side] -= 1;
+          this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
+        } else {
+          fuse.lit = false;
+        }
+      }
+    }
+  }
+
+  updateRoll(dt) {
+    // I should probs use dt in here somewhere
+    // calc rotation direction
     if (this.ship.rotation.y > 0) {
       this.rollAcc = -0.0003;
     } else if (this.ship.rotation.y < 0) {
-      // Set boat rotation to nothin
       this.rollAcc = 0.0003;
     }
 
@@ -156,6 +200,26 @@ class Player {
         this.ship.rotation.y += this.rollSpeed;
       }
     }
+  }
+
+  // Central update
+  update(dt) {
+    // Set this once a frame so that enemies can use it
+    this.getWorldPosition();
+
+    this.updateRoll(dt);
+    // Update both sets of cannons
+    this.updateCannons(dt, SHIP_DIRECTIONS.PORT);
+    this.updateCannons(dt, SHIP_DIRECTIONS.STARBOARD);
+
+    // always moving forward
+    // switch to acceleration and velocity with a max speed
+    if (this.speed > 0 && this.turnRate !== 0) {
+      // if turning apply yaw to forward
+      this.moveSphere.rotateOnAxis(this.yawAxis, this.turnRate * dt);
+    }
+    // apply rotspeed to move sphere based on forward
+    this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.speed);
   }
 }
 

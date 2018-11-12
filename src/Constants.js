@@ -21,7 +21,13 @@ export const GAME_TYPES = {
   CANNONBALL: 'CANNONBALL',
 };
 
+export const SHIP_DIRECTIONS = {
+  PORT: 'PORT',
+  STARBOARD: 'STARBOARD',
+};
+
 export default {
   KEYS,
   GAME_TYPES,
+  SHIP_DIRECTIONS,
 };

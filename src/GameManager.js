@@ -4,7 +4,7 @@ import Player from './Actors/Player';
 import Cannonball from './Actors/Cannonball';
 import { getModel } from './AssetManager';
 import EnemyShip from './Actors/EnemyShip';
-import { GAME_TYPES } from './Constants';
+import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -23,6 +23,18 @@ let shakeYScale = 0;
 const WORLD_SIZE = 300;
 
 const scene = new THREE.Scene();
+// Possibly make this a class so I can do that sweet tween
+// find a good number for this
+const cameraScale = 7;
+const camera = new THREE.OrthographicCamera(
+  window.innerWidth / (-cameraScale),
+  window.innerWidth / cameraScale,
+  window.innerHeight / cameraScale,
+  window.innerHeight / (-cameraScale),
+  -100,
+  1000
+);
+
 const cannonballPool = Array.from(
   { length: 150 },
   () => new Cannonball(scene, WORLD_SIZE)
@@ -46,20 +58,11 @@ const enemyPool = Array.from(
   () => new EnemyShip(scene, WORLD_SIZE, fireEnemyCannon)
 );
 
-const portCannonAmmo = 0;
-const starboardCannonAmmo = 0;
-
-// Possibly make this a class so I can do that sweet tween
-// find a good number for this
-const cameraScale = 7;
-const camera = new THREE.OrthographicCamera(
-  window.innerWidth / (-cameraScale),
-  window.innerWidth / cameraScale,
-  window.innerHeight / cameraScale,
-  window.innerHeight / (-cameraScale),
-  -100,
-  1000
-);
+const firePlayerCannon = (side, rotation, position) => {
+  const cannonball = cannonballPool.find(b => !b.isActive);
+  if (cannonball) cannonball.playerFire(side, rotation, position, 0.03);
+};
+const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0x000033, 1);
@@ -75,8 +78,6 @@ getModel('./Assets/world.stl')
     world.scale.set(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE);
     scene.add(world);
   });
-
-const player = new Player(scene, camera, WORLD_SIZE);
 
 // rework this to move div, or at least the implementation
 // possibly just shake the camera
@@ -128,7 +129,6 @@ function update(currentTime) {
   totalTime += dt;
 
   player.update(dt);
-  player.getWorldPosition(); // ewwww
   cannonballPool.forEach(c => c.update(dt));
   enemyPool.forEach(e => e.update(dt, player.worldPos));
 
@@ -189,24 +189,25 @@ export function init(input$) {
       player.setTurnAngle(0);
     }
 
-    if (e.keyCode === 32) {
-      const cannonball = cannonballPool.find(b => !b.isActive);
-      if (cannonball) {
-        cannonball.playerFire(
-          'STARBOARD',
-          player.moveSphere.rotation,
-          0.025,
-          0.03,
-        );
+    // PLAYER CANNON LOGIC SHOULD BE MOVED TO PLAYER
+    // light port
+    if (e.keyCode === 87) {
+      player.lightFuse(SHIP_DIRECTIONS.PORT);
+    }
+    // light starboard
+    if (e.keyCode === 83) {
+      player.lightFuse(SHIP_DIRECTIONS.STARBOARD);
+    }
 
-        player.addRoll(-0.01);
-        // Front cannon
-        // 0.05
-        // Mid Cannon
-        // 0.025
-        // Back cannon
-        // 0
-      }
+    // Load port
+    if (e.keyCode === 65) {
+      // if (portAmmo < 3) portAmmo++;
+      player.loadCannon(SHIP_DIRECTIONS.PORT);
+    }
+
+    // Load starboard
+    if (e.keyCode === 68) {
+      player.loadCannon(SHIP_DIRECTIONS.STARBOARD);
     }
   };
 

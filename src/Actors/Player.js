@@ -1,36 +1,24 @@
 import * as THREE from 'three';
 import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
-// maybe use this only in one spot so I
-// can do the loading screen thing
+// maybe use asset manager only in one spot so I
+// can do the loading screen thing, then pass the models
+// or since it's memoized just do a preload somewhere
 import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
 
 class Player {
   constructor(scene, camera, worldSize, fireCannon) {
     this.type = GAME_TYPES.PLAYER;
-    // move camera to a class that looks at the player
-    this.camera = camera;
-    this.turnRate = 0;
+    // move camera to a class that looks at the player maybe
+    this.scene = scene;
     this.speed = 0.01 / worldSize; // scaled to world size bc rotation
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
-    this.worldPos = new THREE.Vector3();
+    this.worldPos = new THREE.Vector3(); // stores world location
 
+    this.turnRate = 0;
     this.rollSpeed = 0;
     this.rollAcc = 0;
-
-    // Fire logic
-    this.fireCannon = fireCannon;
-    // names for these need to match the constants
-    this.ammo = { PORT: 0, STARBOARD: 0 };
-    this.fuses = {
-      PORT: { lit: false, time: 0 },
-      STARBOARD: { lit: false, time: 0 },
-    };
-    this.FUSE_MAX = 1500;
-    // [back, mid, front]
-    this.CANNON_POS = [0, 0.025, 0.05];
-    this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
 
     // Set it to be on the edge of the world
     this.gameObject = new THREE.Object3D();
@@ -50,11 +38,15 @@ class Player {
       });
 
     // Sails
-    const sailMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xffffff, side: THREE.DoubleSide });
+    const sailMat = new THREE.MeshPhongMaterial({
+      flatShading: true,
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+    });
     getModel('./Assets/pirate/pirate_frontsail.stl')
       .then((geo) => {
         this.frontSail = new THREE.Mesh(geo, sailMat);
-        this.frontSail.position.x = 2.07;
+        this.frontSail.position.x = 2.07; // hard coded from model file
         this.frontSail.position.y = 18.80;
         this.ship.add(this.frontSail);
       });
@@ -62,7 +54,7 @@ class Player {
     getModel('./Assets/pirate/pirate_backsail.stl')
       .then((geo) => {
         this.backSail = new THREE.Mesh(geo, sailMat);
-        this.backSail.position.x = 2.16;
+        this.backSail.position.x = 2.16; // hard coded from model file
         this.backSail.position.y = 7.29;
         this.ship.add(this.backSail);
       });
@@ -70,13 +62,12 @@ class Player {
     getModel('./Assets/pirate/pirate_rudder.stl')
       .then((geo) => {
         this.rudder = new THREE.Mesh(geo, sailMat);
-        // this.rudder.position.x = 2.16;
-        this.rudder.position.y = -8.18;
+        this.rudder.position.y = -8.18; // hard coded from model file
         this.ship.add(this.rudder);
       });
 
-    // Cannons
     // Map over these positions in loader to set cannon spot
+    // values are hard coded from models
     this.portCannons = [[-2.49, 18.05, 0], [-3.49, 10.95, 0], [-2.49, 3.86, 0]];
     this.starboardCannons = [[2.49, 18.05, 0], [3.49, 10.95, 0], [2.49, 3.86, 0]];
     this.cannonLoadedMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -100,20 +91,35 @@ class Player {
         });
       });
 
+    // Fire logic
+    this.fireCannon = fireCannon; // passed in to use cannon pool
+    // names for these need to match the constants
+    this.ammo = { PORT: 0, STARBOARD: 0 };
+    this.fuses = {
+      PORT: { lit: false, time: 0 },
+      STARBOARD: { lit: false, time: 0 },
+    };
+    this.FUSE_MAX = 1500;
+    // [back, mid, front]
+    this.CANNON_POS = [0, 0.025, 0.05];
+    this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
+
     // Set camera to follow player nice, values set manually
+    // consider camera class if it needs any functionality
     this.camera = camera;
     this.gameObject.add(this.camera);
     this.camera.position.z = 10;
     this.camera.position.y = 22;
     this.camera.rotateX(0.9);
 
+    // Why am I setting lights on the player? so what you look at is illuminated nice
     const light = new THREE.PointLight(0xffffff, 0.5, 200000);
     const ambient = new THREE.AmbientLight(0x505050);
     this.gameObject.add(light);
     this.gameObject.add(ambient);
     light.position.set(0, -40, 100);
 
-    // Avoid gimble lock with two rotation spheres
+    // Avoid gimble lock with rotation spheres
     this.moveSphere = new THREE.Object3D();
     this.moveSphere.add(this.gameObject);
 
@@ -121,6 +127,7 @@ class Player {
     scene.add(this.moveSphere);
   }
 
+  // Used for collisions and player tracking on enemies
   getWorldPosition() {
     this.gameObject.getWorldPosition(this.worldPos);
     return this.worldPos;
@@ -135,7 +142,6 @@ class Player {
   }
 
   addRoll(impulse) {
-    // this.ship.rotateY(angle);
     this.rollSpeed += impulse;
   }
 
@@ -170,10 +176,13 @@ class Player {
           );
           // hard coded offest btw cannon fire
           fuse.time = this.FUSE_MAX - 130;
-          // Primitives are not passed by ref
+          // Primitives are not passed by ref so i need to do this here
           this.ammo[side] -= 1;
+
+          // maybe cancel the animation to add impact
           this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
         } else {
+          // out of ammo, stop firing
           fuse.lit = false;
         }
       }
@@ -189,8 +198,10 @@ class Player {
       this.rollAcc = 0.0003;
     }
 
+    // Only roll when there is roll speed
     if (this.rollSpeed !== 0) {
       const shipRoll = this.ship.rotation.y;
+      // Stop the roll if the speed is low and at center
       if (isInRange(0.0015, -0.0015, shipRoll) && isInRange(0.0015, -0.0015, this.rollSpeed)) {
         this.rollSpeed = 0;
         this.ship.rotation.y = 0;

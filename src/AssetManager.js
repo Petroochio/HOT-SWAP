@@ -3,7 +3,6 @@ import { isNil } from 'ramda';
 import STLLoader from '../lib/STLLoader';
 
 const stlLoader = new STLLoader();
-
 const modelStore = {};
 
 export function getModel(path) {

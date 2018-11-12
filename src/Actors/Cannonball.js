@@ -1,35 +1,38 @@
 import * as THREE from 'three';
-import { GAME_TYPES } from '../Constants';
+import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 
 class Cannonball {
   constructor(scene, worldSize) {
-    // organize these somehow?
+    // Constant properties
     this.type = GAME_TYPES.CANNONBALL;
-    this.ownerType = '';
-    this.worldSize = worldSize;
-    this.isActive = false;
     this.scene = scene;
+    this.worldSize = worldSize;
     this.speed = 0.07 / worldSize;
-    this.playerSpeed = 0.04 / worldSize;
-    this.accelCounter = 1000;
+    this.playerSpeed = 0.04 / worldSize; // Use only when player owner
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
-    this.playerAxis = new THREE.Vector3(0, 0, 0);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
+    this.hitRadius = 3; // Size for calculating collisions
+
+    this.isActive = false;
+    this.ownerType = ''; // set when fired
+    this.accelCounter = 1000;
+    this.playerAxis = new THREE.Vector3(0, 0, 0);
     // Used to store world position
     this.worldPos = new THREE.Vector3();
-    this.hitRadius = 3;
+
     this.flightTime = 0;
     this.maxFlight = 1500;
 
     // maybe scale it up after it fires
-    const ballGeo = new THREE.SphereGeometry(3, 32, 32);
+    const ballGeo = new THREE.SphereGeometry(3, 32, 32); // un hardcode these pls
     const ballMat = new THREE.MeshPhongMaterial({ flatShading: false, color: 0x000000 });
 
+    // This game object is just one model, the ball itself
     this.gameObject = new THREE.Mesh(ballGeo, ballMat);
     this.gameObject.position.x = worldSize + 4;
     this.gameObject.visible = false;
+
     // this is the same thing as in all other actors
-    // Avoid gimble lock with two rotation spheres
     this.moveSphere = new THREE.Object3D();
     this.moveSphere.add(this.gameObject);
     this.scene.add(this.moveSphere);
@@ -40,29 +43,33 @@ class Cannonball {
     return this.worldPos;
   }
 
-  enemyFire(enemyRot, startOffset) {
+  reset(ownerType) {
     this.isActive = true;
     this.gameObject.visible = true;
     this.accelCounter = 300;
-    this.ownerType = GAME_TYPES.ENEMY;
-
+    this.ownerType = ownerType;
+    // Initialize size for startup animation
     this.gameObject.scale.set(0.001, 0.001, 0.001);
+  }
+
+  enemyFire(enemyRot, startOffset) {
+    this.reset(GAME_TYPES.ENEMY);
+    // Set position, then rotate to front of cannon
     this.moveSphere.rotation.set(enemyRot.x, enemyRot.y, enemyRot.z);
     this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
   }
 
+  // Fires cannonball as if rom player
   playerFire(side, playerRot, startOffset, cannonOffset) {
-    this.isActive = true;
-    this.gameObject.visible = true;
-    this.accelCounter = 300;
-    this.ownerType = GAME_TYPES.PLAYER;
+    this.reset(GAME_TYPES.PLAYER);
 
-    // Add top level obj to scene
-    // I'll need to remove it when it dies
-    this.gameObject.scale.set(0.001, 0.001, 0.001);
+    // Set position, then move to relative position of cannon
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
     this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
-    if (side === 'PORT') {
+
+    // Based on the side it is fired from, rotate and set player forward axis
+    // Might want to make this section generic
+    if (side === SHIP_DIRECTIONS.PORT) {
       this.moveSphere.rotateOnAxis(this.yawAxis, Math.PI / 2);
       this.playerAxis = new THREE.Vector3(0, 1, 0);
     } else {
@@ -70,29 +77,33 @@ class Cannonball {
       this.playerAxis = new THREE.Vector3(0, -1, 0);
     }
 
+    // Move to front of cannon
     this.moveSphere.rotateOnAxis(this.forwardAxis, cannonOffset);
   }
 
-  reset() {
+  hide() {
     this.isActive = false;
     this.gameObject.visible = false;
     this.flightTime = 0;
   }
 
+  // Triggers exploding animation
   explode() {
     // trigger explosion animation instead
-    this.reset();
+    this.hide();
   }
 
+  // Triggers splashing animation
   splash() {
     // trigger splash animation instead
-    this.reset();
+    this.hide();
   }
 
   update(dt) {
     if (this.isActive) {
       let move = dt * this.speed;
-      // hacky fire animation code
+
+      // Starting animation that speeds up cannonball when first fired
       if (this.accelCounter > 0) {
         this.accelCounter -= dt;
         move *= this.accelCounter / 150;
@@ -102,6 +113,7 @@ class Cannonball {
         this.gameObject.scale.set(s, s, s);
         this.gameObject.position.x = this.worldSize + 4;
       } else {
+        // Adds to the flight time and moves the cannon closer to water
         this.flightTime += dt;
         // calc distance from surface of water
         const dist = (4 * (this.maxFlight - this.flightTime) / this.maxFlight);
@@ -115,8 +127,8 @@ class Cannonball {
         this.gameObject.scale.set(1, 1, 1);
       }
 
+      // Movement
       this.moveSphere.rotateOnAxis(this.forwardAxis, move);
-
       // add player angular speed
       if (this.ownerType === GAME_TYPES.PLAYER) {
         this.moveSphere.rotateOnAxis(this.playerAxis, dt * this.playerSpeed);

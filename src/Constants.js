@@ -15,6 +15,8 @@ export const KEYS = {
   SPACE: 32,
 };
 
+// to me this is more straightforward than using type of,
+// and it allows for broader categories
 export const GAME_TYPES = {
   PLAYER: 'PLAYER',
   ENEMY: 'ENEMY',

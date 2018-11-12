@@ -16,9 +16,6 @@ let canSpawn = true;
 // Screen shake for juice
 let isShaking = false;
 let shakeTimer = 0;
-let shakeIntensity = 4;
-let shakeXScale = 0;
-let shakeYScale = 0;
 
 const WORLD_SIZE = 300;
 
@@ -52,7 +49,6 @@ const fireEnemyCannon = (enemyRot) => {
   }
 };
 
-// dont create a new array every frame
 const enemyPool = Array.from(
   { length: 50 },
   () => new EnemyShip(scene, WORLD_SIZE, fireEnemyCannon)
@@ -64,12 +60,13 @@ const firePlayerCannon = (side, rotation, position) => {
 };
 const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon);
 
+// init renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0x000033, 1);
 renderer.setPixelRatio(window.devicePixelRatio);
-// Make world a class that just holds the globe and maybe some clouds, land?
-// should also include lights
 
+// Make world a class that just holds the globe and maybe some clouds, land?
+// should also include lights, except for player point light
 const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x55ffcc });
 let world;
 getModel('./Assets/world.stl')
@@ -78,16 +75,6 @@ getModel('./Assets/world.stl')
     world.scale.set(WORLD_SIZE, WORLD_SIZE, WORLD_SIZE);
     scene.add(world);
   });
-
-// rework this to move div, or at least the implementation
-// possibly just shake the camera
-function startShake(time, intensity) {
-  isShaking = true;
-  shakeTimer = time;
-  shakeIntensity = intensity;
-  shakeXScale = Math.random() > 0.5 ? 1 : -1;
-  shakeYScale = Math.random() > 0.5 ? 1 : -1;
-}
 
 function spawnEnemy() {
   if (canSpawn) {
@@ -110,19 +97,13 @@ function checkCollisions() {
           }
         });
       }
+      // check player hit here
+      // should also map over enemies to intersect player
     }
   });
 }
 
 function update(currentTime) {
-  // bail
-  if (isGameOver) {
-    document.querySelector('#ui').className = '';
-    document.querySelector('#game-over').className = '';
-    document.querySelector('#score').innerHTML = score;
-    return;
-  }
-
   if (prevTime === 0) prevTime = currentTime;
   const dt = currentTime - prevTime;
   prevTime = currentTime;
@@ -134,11 +115,6 @@ function update(currentTime) {
 
   checkCollisions();
 
-  // old stuff?
-  // Screen shake stuff
-  if (isShaking) shakeTimer -= dt;
-  if (isShaking && shakeTimer <= 0) isShaking = false;
-
   // Enemy spawn logic
   enemySpawnTimer += dt;
   if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
@@ -149,13 +125,9 @@ function update(currentTime) {
 }
 
 function reset() {
+  // do game state reset stuff here
   prevTime = 0;
   totalTime = 0;
-  score = 0;
-  isGameOver = false;
-
-  document.querySelector('#ui').className = 'hidden';
-  document.querySelector('#title').className = 'hidden';
 
   requestAnimationFrame(update.bind(this));
 }
@@ -177,6 +149,8 @@ export function init(input$) {
   window.onkeydown = (e) => {
     // I made constants for this specific reason :(
     if (e.keyCode === 37) {
+      // should be adding to turn angle with actual controller
+      // also need to add stuff for speed
       player.setTurnAngle(0.0004);
     } else if (e.keyCode === 39) {
       player.setTurnAngle(-0.0004);
@@ -189,7 +163,6 @@ export function init(input$) {
       player.setTurnAngle(0);
     }
 
-    // PLAYER CANNON LOGIC SHOULD BE MOVED TO PLAYER
     // light port
     if (e.keyCode === 87) {
       player.lightFuse(SHIP_DIRECTIONS.PORT);
@@ -201,7 +174,6 @@ export function init(input$) {
 
     // Load port
     if (e.keyCode === 65) {
-      // if (portAmmo < 3) portAmmo++;
       player.loadCannon(SHIP_DIRECTIONS.PORT);
     }
 

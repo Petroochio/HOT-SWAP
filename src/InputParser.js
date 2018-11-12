@@ -2,6 +2,9 @@ import { find, isNil, not, nth, pipe, take, tail } from 'ramda';
 
 const notNil = pipe(isNil, not);
 
+// all of the ids are hardcoded, we should create a function check and look at
+// a file elseware
+
 export function getAnalogButton(input$) {
   return input$
     // this could perhaps be simpler,
@@ -38,8 +41,3 @@ export function getThumbstick(input$) {
     // sensor vals reversed
     .map(([y, x]) => ([x, y]));
 }
-
-/*
-x: 437, 125
-y: 461, 492
-*/

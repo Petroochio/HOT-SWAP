@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { clamp } from 'ramda';
+
 import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 // maybe use asset manager only in one spot so I
 // can do the loading screen thing, then pass the models
@@ -11,10 +13,16 @@ class Player {
     this.type = GAME_TYPES.PLAYER;
     // move camera to a class that looks at the player maybe
     this.scene = scene;
-    this.speed = 0.01 / worldSize; // scaled to world size bc rotation
+    this.velocityMin = 0.0001 / worldSize;
+    this.velocityMax = 0.000000004; // scaled to world size bc rotation
+    this.velocity = this.velocityMin;
+    this.acceleration = 0.0000000001;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
     this.worldPos = new THREE.Vector3(); // stores world location
+
+    this.rollOffset = 0;
+    this.turnRollOffset = 0;
 
     this.turnRate = 0;
     this.rollSpeed = 0;
@@ -30,19 +38,22 @@ class Player {
     this.gameObject.add(this.ship);
 
     // this mat might need to change
-    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
+    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xD69136 });
     getModel('./Assets/pirate/pirate_body.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
         this.ship.add(this.body);
       });
-
+    const specular = new THREE.Color(0xffffff);
     // Sails
-    const sailMat = new THREE.MeshPhongMaterial({
-      flatShading: true,
+    const sailMat = new THREE.MeshLambertMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
+      // specular,
+      shininess: 100,
+      reflectivity: 0,
     });
+    // sailMat.specular = ;
     getModel('./Assets/pirate/pirate_frontsail.stl')
       .then((geo) => {
         this.frontSail = new THREE.Mesh(geo, sailMat);
@@ -71,18 +82,18 @@ class Player {
     this.portCannons = [[-2.49, 18.05, 0], [-3.49, 10.95, 0], [-2.49, 3.86, 0]];
     this.starboardCannons = [[2.49, 18.05, 0], [3.49, 10.95, 0], [2.49, 3.86, 0]];
     this.cannonLoadedMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    this.cannonUnloadedMat = new THREE.MeshBasicMaterial({ color: 0x777777 });
+    this.cannonMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
     getModel('./Assets/pirate/pirate_cannon.stl')
       .then((geo) => {
         this.portCannons = this.portCannons.map((position) => {
-          const cannon = new THREE.Mesh(geo, this.cannonUnloadedMat);
+          const cannon = new THREE.Mesh(geo, this.cannonMat);
           cannon.position.set(...position);
           this.ship.add(cannon);
           return cannon;
         });
 
         this.starboardCannons = this.starboardCannons.map((position) => {
-          const cannon = new THREE.Mesh(geo, this.cannonUnloadedMat);
+          const cannon = new THREE.Mesh(geo, this.cannonMat);
           // Gotta flip the model
           cannon.rotateZ(Math.PI);
           cannon.position.set(...position);
@@ -99,7 +110,7 @@ class Player {
       PORT: { lit: false, time: 0 },
       STARBOARD: { lit: false, time: 0 },
     };
-    this.FUSE_MAX = 1500;
+    this.FUSE_MAX = 200;
     // [back, mid, front]
     this.CANNON_POS = [0, 0.025, 0.05];
     this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
@@ -114,10 +125,13 @@ class Player {
 
     // Why am I setting lights on the player? so what you look at is illuminated nice
     const light = new THREE.PointLight(0xffffff, 0.5, 200000);
+    // const light2 = new THREE.PointLight(0xffffff, 0.5, 200);
     const ambient = new THREE.AmbientLight(0x505050);
     this.gameObject.add(light);
+    // this.gameObject.add(light2);
     this.gameObject.add(ambient);
     light.position.set(0, -40, 100);
+    // light2.position.set(0, 2, 30);
 
     // Avoid gimble lock with rotation spheres
     this.moveSphere = new THREE.Object3D();
@@ -134,11 +148,18 @@ class Player {
   }
 
   setTurnAngle(angle) {
-    this.turnRate = angle;
-    this.rudder.rotation.z = -angle * 1000;
+    this.turnRate = clamp(-0.0005, 0.0005, this.turnRate + angle);
+    this.rudder.rotation.z = -this.turnRate * 1000;
     // tween this
     // and add a roll
-    this.ship.rotation.z = angle * 100;
+    this.turnRollOffset = this.turnRate * 20;
+    this.ship.rotation.z = this.turnRate * 200;
+  }
+
+  setSailSpeed(delta) {
+    // scale sails here
+    this.acceleration = clamp(0, this.accelerationMax, this.acceleration + delta);
+    console.log(this.acceleration);
   }
 
   addRoll(impulse) {
@@ -175,7 +196,7 @@ class Player {
             this.CANNON_POS[ammo - 1]
           );
           // hard coded offest btw cannon fire
-          fuse.time = this.FUSE_MAX - 130;
+          fuse.time = this.FUSE_MAX - 100;
           // Primitives are not passed by ref so i need to do this here
           this.ammo[side] -= 1;
 
@@ -200,15 +221,15 @@ class Player {
 
     // Only roll when there is roll speed
     if (this.rollSpeed !== 0) {
-      const shipRoll = this.ship.rotation.y;
       // Stop the roll if the speed is low and at center
-      if (isInRange(0.0015, -0.0015, shipRoll) && isInRange(0.0015, -0.0015, this.rollSpeed)) {
+      if (isInRange(0.0015, -0.0015, this.rollOffset) && isInRange(0.0015, -0.0015, this.rollOffset)) {
         this.rollSpeed = 0;
-        this.ship.rotation.y = 0;
+        this.ship.rotation.y = this.turnRollOffset;
       } else {
         this.rollSpeed += this.rollAcc;
         this.rollSpeed *= 0.98;
-        this.ship.rotation.y += this.rollSpeed;
+        this.rollOffset += this.rollSpeed;
+        this.ship.rotation.y = this.rollOffset + this.turnRollOffset;
       }
     }
   }
@@ -225,12 +246,23 @@ class Player {
 
     // always moving forward
     // switch to acceleration and velocity with a max speed
-    if (this.speed > 0 && this.turnRate !== 0) {
+    if (this.velocity > this.velocityMin && this.turnRate !== 0) {
       // if turning apply yaw to forward
       this.moveSphere.rotateOnAxis(this.yawAxis, this.turnRate * dt);
     }
+    // just change velocity max
+    if (this.velocity > this.acceleration * 300) {
+      this.velocity -= 0.00001 * dt;
+    } else {
+      this.velocity = clamp(
+        0,
+        this.acceleration * 300,
+        this.velocity + this.acceleration * dt,
+      );
+    }
+    
     // apply rotspeed to move sphere based on forward
-    this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.speed);
+    this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.velocity);
   }
 }
 

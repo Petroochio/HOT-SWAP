@@ -7,13 +7,17 @@ class EnemyShip {
   constructor(scene, worldSize, fireCannon) {
     this.type = GAME_TYPES.ENEMY;
     this.scene = scene;
+    this.worldSize = worldSize;
     this.fireCannon = fireCannon;
     this.speed = 0.005 / worldSize;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
 
     this.isActive = false;
-    this.accelCounter = 1000;
+    this.floatPos = 0;
+    this.floatAcc = 0;
+    this.floatVel = 0;
+    this.restingPos = this.worldSize - 2;
 
     this.shootTimer = 0;
     this.shootMax = 5000;
@@ -28,7 +32,6 @@ class EnemyShip {
 
     // container for body of the ship
     this.gameObject = new THREE.Object3D();
-    this.gameObject.position.x = worldSize - 2;
     this.gameObject.rotateY(Math.PI / 2);
 
     // Main body
@@ -82,6 +85,7 @@ class EnemyShip {
   // Spawn within an arc of the player at a set distance
   spawn(playerRot) {
     this.isActive = true;
+    this.floatPos = -20;
 
     // start with player position
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
@@ -100,7 +104,16 @@ class EnemyShip {
   die() {
     // trigger death animation
     this.isActive = false;
+    this.floatPos = -20;
     this.gameObject.visible = false;
+  }
+
+  updateFloat(dt) {
+    this.floatAcc = -1 * (this.floatPos) * 0.00001;
+    this.floatVel += this.floatAcc * dt;
+    this.floatVel *= 0.93;
+    this.floatPos += this.floatVel * dt;
+    this.gameObject.position.x = this.restingPos + this.floatPos;
   }
 
   // Logic for seeking the player
@@ -115,11 +128,12 @@ class EnemyShip {
     if (planeTest > 0.001 || planeTest < -0.001) turn = planeTest > 0 ? 1 : -1;
 
     // hard coded turn rate at end, maybe make this a twean
-    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.00001);
+    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0001);
   }
 
   update(dt, playerPos) {
     if (this.isActive) {
+      this.updateFloat(dt);
       this.updateHeading(dt, playerPos);
 
       // maybe add another enemy that's got cannons at the side

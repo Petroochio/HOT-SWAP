@@ -1,10 +1,14 @@
 import * as THREE from 'three';
+import { prop } from 'ramda';
 
 import Player from './Actors/Player';
 import Cannonball from './Actors/Cannonball';
 import { getModel } from './AssetManager';
 import EnemyShip from './Actors/EnemyShip';
 import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
+import {
+  getHatch, getWick, getRudderKnob, getSailKnob
+} from './InputParser';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -22,7 +26,7 @@ const WORLD_SIZE = 300;
 const scene = new THREE.Scene();
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
-const cameraScale = 7;
+const cameraScale = 10;
 const camera = new THREE.OrthographicCamera(
   window.innerWidth / (-cameraScale),
   window.innerWidth / cameraScale,
@@ -146,23 +150,7 @@ export function init(input$) {
   document.body.appendChild(renderer.domElement);
   resize();
 
-  window.onkeydown = (e) => {
-    // I made constants for this specific reason :(
-    if (e.keyCode === 37) {
-      // should be adding to turn angle with actual controller
-      // also need to add stuff for speed
-      player.setTurnAngle(0.0004);
-    } else if (e.keyCode === 39) {
-      player.setTurnAngle(-0.0004);
-    }
-  };
-
   window.onkeyup = (e) => {
-    // I made constants for this specific reason :(
-    if (e.keyCode === 37 || e.keyCode === 39) {
-      player.setTurnAngle(0);
-    }
-
     // light port
     if (e.keyCode === 87) {
       player.lightFuse(SHIP_DIRECTIONS.PORT);
@@ -182,6 +170,80 @@ export function init(input$) {
       player.loadCannon(SHIP_DIRECTIONS.STARBOARD);
     }
   };
+
+  // Steering
+  getRudderKnob(input$)
+    .map(data => data.value + Math.PI)
+    .fold(
+      (prev, value) => {
+        let delta = 0;
+        const valChange = prev.value - value;
+        if (valChange > 0.05) delta = -0.00001;
+        if (valChange < -0.05) delta = 0.00001;
+        return {
+          delta,
+          value,
+        };
+      },
+      { delta: 0, value: 0 }
+    )
+    .filter(data => data.delta !== 0)
+    .subscribe({
+      next: data => player.setTurnAngle(data.delta),
+      error: console.log,
+      complete: console.log,
+    });
+
+  // Speed
+  getSailKnob(input$)
+    .map(data => data.value + Math.PI)
+    .fold(
+      (prev, value) => {
+        let delta = 0;
+        const valChange = prev.value - value;
+        if (valChange > 0.05) delta = 0.0000001;
+        if (valChange < -0.05) delta = -0.0000001;
+        return {
+          delta,
+          value,
+        };
+      },
+      { delta: 0, value: 0 }
+    )
+    .filter(data => data.delta !== 0)
+    .subscribe({
+      next: data => player.setSailSpeed(data.delta),
+      error: console.log,
+      complete: console.log,
+    });
+
+  // Ammo
+  getHatch(input$)
+    .fold(
+      (acc, curr) => ({ id: curr.id, prev: curr.isOpen, shouldLoad: (curr.isOpen && !acc.prev) }),
+      { id: 0, shouldLoad: false }
+    )
+    .filter(prop('shouldLoad'))
+    .map(({ id }) => (id === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD))
+    .subscribe({
+      next: direction => player.loadCannon(direction),
+      error: console.log,
+      complete: console.log,
+    });
+
+  // Fire
+  getWick(input$)
+    .fold(
+      (acc, curr) => ({ id: curr.id, prev: curr.isLit, shouldLight: (curr.isLit && !acc.prev) }),
+      { id: 0, shouldLight: false }
+    )
+    .filter(prop('shouldLight'))
+    .map(({ id }) => (id === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD))
+    .subscribe({
+      next: direction => player.lightFuse(direction),
+      error: console.log,
+      complete: console.log,
+    });
 
   playListener();
 }

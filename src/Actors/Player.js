@@ -13,10 +13,11 @@ class Player {
     this.type = GAME_TYPES.PLAYER;
     // move camera to a class that looks at the player maybe
     this.scene = scene;
-    this.velocityMin = 0.0001 / worldSize;
-    this.velocityMax = 0.000000004; // scaled to world size bc rotation
+    this.velocityMin = 0.000007;
+    this.velocityMax = 0.00015; // scaled to world size bc rotation
+    this.velocityTarget = this.velocityMin;
     this.velocity = this.velocityMin;
-    this.acceleration = 0.0000000001;
+    this.acceleration = 0.0000001;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
     this.worldPos = new THREE.Vector3(); // stores world location
@@ -152,14 +153,13 @@ class Player {
     this.rudder.rotation.z = -this.turnRate * 1000;
     // tween this
     // and add a roll
-    this.turnRollOffset = this.turnRate * 20;
-    this.ship.rotation.z = this.turnRate * 200;
+    this.turnRollOffset = -this.turnRate * 150;
+    // this.ship.rotation.z = this.turnRate * 200;
   }
 
   setSailSpeed(delta) {
     // scale sails here
-    this.acceleration = clamp(0, this.accelerationMax, this.acceleration + delta);
-    console.log(this.acceleration);
+    this.velocityTarget = clamp(this.velocityMin, this.velocityMax, this.velocityTarget + delta);
   }
 
   addRoll(impulse) {
@@ -219,12 +219,12 @@ class Player {
       this.rollAcc = 0.0003;
     }
 
+    this.ship.rotation.y = this.turnRollOffset;
     // Only roll when there is roll speed
     if (this.rollSpeed !== 0) {
       // Stop the roll if the speed is low and at center
-      if (isInRange(0.0015, -0.0015, this.rollOffset) && isInRange(0.0015, -0.0015, this.rollOffset)) {
+      if (isInRange(0.0015, -0.0015, this.rollOffset) && isInRange(0.0015, -0.0015, this.rollSpeed)) {
         this.rollSpeed = 0;
-        this.ship.rotation.y = this.turnRollOffset;
       } else {
         this.rollSpeed += this.rollAcc;
         this.rollSpeed *= 0.98;
@@ -246,21 +246,17 @@ class Player {
 
     // always moving forward
     // switch to acceleration and velocity with a max speed
-    if (this.velocity > this.velocityMin && this.turnRate !== 0) {
+    if (this.velocity >= this.velocityMin && this.turnRate !== 0) {
       // if turning apply yaw to forward
       this.moveSphere.rotateOnAxis(this.yawAxis, this.turnRate * dt);
     }
     // just change velocity max
-    if (this.velocity > this.acceleration * 300) {
-      this.velocity -= 0.00001 * dt;
+    if (this.velocity > this.velocityTarget) {
+      this.velocity -= this.acceleration * dt;
     } else {
-      this.velocity = clamp(
-        0,
-        this.acceleration * 300,
-        this.velocity + this.acceleration * dt,
-      );
+      this.velocity += this.acceleration * dt;
     }
-    
+
     // apply rotspeed to move sphere based on forward
     this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.velocity);
   }

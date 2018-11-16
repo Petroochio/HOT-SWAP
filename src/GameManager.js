@@ -201,8 +201,8 @@ export function init(input$) {
       (prev, value) => {
         let delta = 0;
         const valChange = prev.value - value;
-        if (valChange > 0.05) delta = 0.0000001;
-        if (valChange < -0.05) delta = -0.0000001;
+        if (valChange > 0.05) delta = 0.000001;
+        if (valChange < -0.05) delta = -0.000001;
         return {
           delta,
           value,

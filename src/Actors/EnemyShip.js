@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GAME_TYPES } from '../Constants';
 
 import { getModel } from '../AssetManager';
+import { isInRange } from '../utils';
 
 class EnemyShip {
   constructor(scene, worldSize, fireCannon) {
@@ -19,6 +20,11 @@ class EnemyShip {
     this.floatVel = 0;
     this.restingPos = this.worldSize - 2;
 
+    this.pitchSpawnOffset = 0;
+    this.pitchOffset = 0;
+    this.pitchSpeed = 0;
+    this.pitchAcc = 0;
+
     this.shootTimer = 0;
     this.shootMax = 5000;
 
@@ -33,13 +39,15 @@ class EnemyShip {
     // container for body of the ship
     this.gameObject = new THREE.Object3D();
     this.gameObject.rotateY(Math.PI / 2);
+    this.ship = new THREE.Object3D();
+    this.gameObject.add(this.ship);
 
     // Main body
     const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
     getModel('./Assets/enemy/enemy_body.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
-        this.gameObject.add(this.body);
+        this.ship.add(this.body);
       });
 
     // sail
@@ -48,7 +56,7 @@ class EnemyShip {
       .then((geo) => {
         this.sail = new THREE.Mesh(geo, sailMat);
         this.sail.position.y = 9.79; // hardcoded from model
-        this.gameObject.add(this.sail);
+        this.ship.add(this.sail);
       });
 
     // cannon
@@ -57,7 +65,7 @@ class EnemyShip {
       .then((geo) => {
         this.cannon = new THREE.Mesh(geo, cannonMat);
         this.cannon.position.y = 23.99; // hardcoded from model
-        this.gameObject.add(this.cannon);
+        this.ship.add(this.cannon);
       });
 
     // Used to calculate hitbox
@@ -86,10 +94,12 @@ class EnemyShip {
   spawn(playerRot) {
     this.isActive = true;
     this.floatPos = -20;
+    this.pitchSpawnOffset = -Math.PI / 3;
 
     // start with player position
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
-    const yawOffset = (Math.random() * 1.31 * Math.PI) + (Math.PI / 3.5);
+    // const yawOffset = Math.PI;//(Math.PI / 3.5); //(Math.random() * 1.31 * Math.PI) + (Math.PI / 3.5);
+    const yawOffset = Math.PI + (Math.random() * Math.PI / 2) - Math.PI / 4;
     const startOffset = -Math.PI / 4;
 
     // move away from player based on randomly generated position
@@ -108,12 +118,41 @@ class EnemyShip {
     this.gameObject.visible = false;
   }
 
+  addPitch(impulse) {
+    this.pitchSpeed += impulse;
+  }
+
+  updatePitch(dt) {
+    // I should probs use dt in here somewhere
+    // calc rotation direction
+    if (this.ship.rotation.x > 0) {
+      this.pitchAcc = -0.0003;
+    } else if (this.ship.rotation.x < 0) {
+      this.pitchAcc = 0.0003;
+    }
+
+    this.ship.rotation.x = this.pitchSpawnOffset;
+    // Only roll when there is roll speed
+    if (this.pitchSpeed !== 0) {
+      // Stop the roll if the speed is low and at center
+      if (isInRange(0.0015, -0.0015, this.pitchOffset) && isInRange(0.0015, -0.0015, this.pitchSpeed)) {
+        this.pitchSpeed = 0;
+      } else {
+        this.pitchSpeed += this.pitchAcc;
+        this.pitchSpeed *= 0.98;
+        this.pitchOffset += this.pitchSpeed;
+        this.ship.rotation.x = this.pitchOffset + this.pitchSpawnOffset;
+      }
+    }
+  }
+
   updateFloat(dt) {
     this.floatAcc = -1 * (this.floatPos) * 0.00001;
     this.floatVel += this.floatAcc * dt;
-    this.floatVel *= 0.93;
+    this.floatVel *= 0.935;
     this.floatPos += this.floatVel * dt;
     this.gameObject.position.x = this.restingPos + this.floatPos;
+    this.pitchSpawnOffset = -this.floatPos / this.restingPos * Math.PI * 4;
   }
 
   // Logic for seeking the player
@@ -133,6 +172,7 @@ class EnemyShip {
 
   update(dt, playerPos) {
     if (this.isActive) {
+      this.updatePitch(dt);
       this.updateFloat(dt);
       this.updateHeading(dt, playerPos);
 
@@ -145,6 +185,7 @@ class EnemyShip {
       if (this.shootTimer >= this.shootMax) {
         this.shootTimer = 0;
         this.fireCannon(this.moveSphere.rotation);
+        this.addPitch(0.006);
       }
     }
   }

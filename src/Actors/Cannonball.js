@@ -15,6 +15,8 @@ class Cannonball {
     this.yawAxis = new THREE.Vector3(1, 0, 0);
     this.hitRadius = 3; // Size for calculating collisions
 
+    this.angularV = 0;
+
     this.isActive = false;
     this.ownerType = ''; // set when fired
     this.accelCounter = 1000;
@@ -58,8 +60,10 @@ class Cannonball {
       (_, i) => {
         const mesh = new THREE.Mesh(smokeGeo, smokeMat);
         this.smoke.add(mesh);
-
-        const spoke = new THREE.Vector3(1, 0, 1);
+        const x = Math.cos((i + 1) / 10 * 2 * Math.PI);
+        const z = Math.sin((i + 1) / 10 * 2 * Math.PI);
+        const spoke = new THREE.Vector3(x, 0.5, z);
+        spoke.normalize();
 
         return {
           mesh,
@@ -106,32 +110,34 @@ class Cannonball {
     this.smoke.position.copy(this.worldPos);
     this.smoke.setRotationFromQuaternion(this.worldQuat);
     this.smokePuffs.forEach((puff) => {
-      // puff.mesh.position.set(0, 0, 0);
+      puff.mesh.position.set(0, 0, 0);
     });
     // this.smoke.rotation.setFromQuaternion(this.worldQuat);
   }
 
   updateSmoke(dt) {
+    
     // move smoke puffs
     if (this.smokeTime < this.smokeMax) {
       this.smokeTime += dt;
-      const s = this.smokeTime / this.smokeMax;
+      const s = 1 - (this.smokeTime / this.smokeMax);
       this.smokePuffs.forEach((puff) => {
-
-        puff.mesh.scale.set(1 - s, 1 - s, 1 - s);
+        puff.mesh.scale.set(0.8 * s, 0.8 * s, 0.8 * s);
+        puff.mesh.position.add(puff.spoke.clone().multiplyScalar(dt / 70));
       });
     } else {
-      // this.smoke.visible = false;
+      this.smoke.visible = false;
     }
   }
 
-  enemyFire(enemyRot, startOffset) {
+  enemyFire(enemyRot, startOffset, angularVelocity) {
     this.fire(GAME_TYPES.ENEMY);
     this.enemyMesh.visible = true;
 
     // Set position, then rotate to front of cannon
     this.moveSphere.rotation.set(enemyRot.x, enemyRot.y, enemyRot.z);
     this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
+    this.angularV = angularVelocity;
     this.emitSmoke();
   }
 
@@ -222,6 +228,8 @@ class Cannonball {
       // add player angular speed
       if (this.ownerType === GAME_TYPES.PLAYER) {
         this.moveSphere.rotateOnAxis(this.playerAxis, dt * this.playerSpeed);
+      } else if (this.ownerType === GAME_TYPES.ENEMY) {
+        this.moveSphere.rotateOnAxis(this.yawAxis, dt * this.angularV);
       }
       this.updateWorldPos();
     }

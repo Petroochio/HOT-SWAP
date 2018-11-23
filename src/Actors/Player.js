@@ -102,10 +102,11 @@ class Player {
 
     // Map over these positions in loader to set cannon spot
     // values are hard coded from models
-    this.portCannons = [[-2.49, 18.05, 0], [-3.49, 10.95, 0], [-2.49, 3.86, 0]];
-    this.starboardCannons = [[2.49, 18.05, 0], [3.49, 10.95, 0], [2.49, 3.86, 0]];
+    this.portCannons = [[-2.49, 3.86, 0], [-3.49, 10.95, 0], [-2.49, 18.05, 0]];
+    this.starboardCannons = [[2.49, 3.86, 0], [3.49, 10.95, 0], [2.49, 18.05, 0]];
     this.cannonLoadedMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
     this.cannonMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+    this.cannonOutlineMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffffff });
     getModel('./Assets/pirate/pirate_cannon.stl')
       .then((geo) => {
         this.portCannons = this.portCannons.map((position) => {
@@ -122,6 +123,26 @@ class Player {
           cannon.position.set(...position);
           this.ship.add(cannon);
           return cannon;
+        });
+
+        return getModel('./Assets/pirate/cannon_offset.stl');
+      })
+      .then((geo) => {
+        this.portCannons = this.portCannons.map((cannon) => {
+          const outline = new THREE.Mesh(geo, this.cannonOutlineMat);
+          outline.position.copy(cannon.position);
+          outline.visible = false;
+          this.ship.add(outline);
+          return { cannon, outline };
+        });
+
+        this.starboardCannons = this.starboardCannons.map((cannon) => {
+          const outline = new THREE.Mesh(geo, this.cannonOutlineMat);
+          outline.rotateZ(Math.PI);
+          outline.position.copy(cannon.position);
+          outline.visible = false;
+          this.ship.add(outline);
+          return { cannon, outline };
         });
       });
 
@@ -196,12 +217,24 @@ class Player {
     this.rollSpeed += impulse;
   }
 
+  updateCannonOutlines() {
+    this.portCannons.forEach((cannon, i) => {
+      cannon.outline.visible = (this.ammo.PORT > i);
+    });
+
+    this.starboardCannons.forEach((cannon, i) => {
+      cannon.outline.visible = (this.ammo.STARBOARD > i);
+    });
+  }
+
   // Fire logic
   loadCannon(side) {
     // no more than 3, and don't load while fuses are lit
     if (this.ammo[side] < 3) {
       this.ammo[side] += 1;
     }
+
+    this.updateCannonOutlines();
   }
 
   lightFuse(side) {
@@ -218,6 +251,8 @@ class Player {
       // maybe cancel the animation to add impact
       this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
     }
+
+    this.updateCannonOutlines();
   }
 
   updateRoll(dt) {

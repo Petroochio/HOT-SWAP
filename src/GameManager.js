@@ -46,10 +46,10 @@ const enemySpawnThreshold = 5200;
 
 // Arrow to keep scope, pass to enemy so we can share one pool
 // maybe create a separate pool for enemy and player :|
-const fireEnemyCannon = (enemyRot) => {
+const fireEnemyCannon = (enemyRot, enemyHeading) => {
   const cannonball = cannonballPool.find(b => !b.isActive);
   if (cannonball) {
-    cannonball.enemyFire(enemyRot, 0.09);
+    cannonball.enemyFire(enemyRot, 0.09, enemyHeading);
   }
 };
 
@@ -71,7 +71,11 @@ renderer.setPixelRatio(window.devicePixelRatio);
 
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights, except for player point light
-const worldMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x55ffcc });
+const worldTex = new THREE.TextureLoader().load('./Assets/world.png');
+const worldMat = new THREE.MeshPhongMaterial({ map: worldTex, flatShading: true });
+worldTex.wrapS = THREE.RepeatWrapping;
+worldTex.wrapT = THREE.RepeatWrapping;
+worldTex.repeat.set(4, 4);
 let world;
 getModel('./Assets/world.stl')
   .then((geo) => {

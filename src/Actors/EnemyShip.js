@@ -19,6 +19,7 @@ class EnemyShip {
     this.floatAcc = 0;
     this.floatVel = 0;
     this.restingPos = this.worldSize - 2;
+    this.headingRotation = 0;
 
     this.pitchSpawnOffset = 0;
     this.pitchOffset = 0;
@@ -44,18 +45,18 @@ class EnemyShip {
 
     // Main body
     const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
-    getModel('./Assets/enemy/enemy_body.stl')
+    getModel('./Assets/enemy/enemy_body_v2.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
         this.ship.add(this.body);
       });
 
     // sail
-    const sailMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, side: THREE.DoubleSide });
-    getModel('./Assets/enemy/enemy_sail.stl')
+    const sailMat = new THREE.MeshPhongMaterial({ color: 0xeeeeee, side: THREE.DoubleSide });
+    getModel('./Assets/enemy/enemy_sail_v2.stl')
       .then((geo) => {
         this.sail = new THREE.Mesh(geo, sailMat);
-        this.sail.position.y = 9.79; // hardcoded from model
+        this.sail.position.y = 14.46; // hardcoded from model
         this.ship.add(this.sail);
       });
 
@@ -165,9 +166,9 @@ class EnemyShip {
     const planeTest = cross.dot(playerPos.normalize());
     let turn = 0;
     if (planeTest > 0.001 || planeTest < -0.001) turn = planeTest > 0 ? 1 : -1;
-
+    this.headingRotation = turn;
     // hard coded turn rate at end, maybe make this a twean
-    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0005);
+    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0003);
   }
 
   update(dt, playerPos) {
@@ -184,7 +185,7 @@ class EnemyShip {
       this.shootTimer += dt;
       if (this.shootTimer >= this.shootMax) {
         this.shootTimer = 0;
-        this.fireCannon(this.moveSphere.rotation);
+        this.fireCannon(this.moveSphere.rotation, this.headingRotation * 0.0003);
         this.addPitch(0.006);
       }
     }

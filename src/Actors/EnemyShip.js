@@ -167,7 +167,7 @@ class EnemyShip {
     if (planeTest > 0.001 || planeTest < -0.001) turn = planeTest > 0 ? 1 : -1;
 
     // hard coded turn rate at end, maybe make this a twean
-    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0001);
+    this.moveSphere.rotateOnAxis(this.yawAxis, dt * turn * 0.0005);
   }
 
   update(dt, playerPos) {

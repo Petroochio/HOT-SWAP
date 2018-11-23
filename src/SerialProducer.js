@@ -17,7 +17,6 @@ class SerialProducer {
       .then(portInfo => new SerialPort(portInfo.comName)
         .pipe(new DelimiterParser({ delimiter: '-' })))
       .then((port) => {
-        console.log(port);
         this.port = port;
       });
   }

@@ -26,7 +26,7 @@ const WORLD_SIZE = 300;
 const scene = new THREE.Scene();
 // Possibly make this a class so I can do that sweet tween
 // find a good number for this
-const cameraScale = 10;
+const cameraScale = 8;
 const camera = new THREE.OrthographicCamera(
   window.innerWidth / (-cameraScale),
   window.innerWidth / cameraScale,
@@ -178,8 +178,8 @@ export function init(input$) {
       (prev, value) => {
         let delta = 0;
         const valChange = prev.value - value;
-        if (valChange > 0.05) delta = -0.00001;
-        if (valChange < -0.05) delta = 0.00001;
+        if (valChange > 0.05) delta = -0.000005;
+        if (valChange < -0.05) delta = 0.000005;
         return {
           delta,
           value,

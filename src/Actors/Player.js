@@ -107,11 +107,7 @@ class Player {
     this.fireCannon = fireCannon; // passed in to use cannon pool
     // names for these need to match the constants
     this.ammo = { PORT: 0, STARBOARD: 0 };
-    this.fuses = {
-      PORT: { lit: false, time: 0 },
-      STARBOARD: { lit: false, time: 0 },
-    };
-    this.FUSE_MAX = 200;
+
     // [back, mid, front]
     this.CANNON_POS = [0, 0.025, 0.05];
     this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
@@ -154,12 +150,17 @@ class Player {
     // tween this
     // and add a roll
     this.turnRollOffset = -this.turnRate * 150;
-    // this.ship.rotation.z = this.turnRate * 200;
+    this.ship.rotation.z = this.turnRate * 100;
   }
 
   setSailSpeed(delta) {
     // scale sails here
     this.velocityTarget = clamp(this.velocityMin, this.velocityMax, this.velocityTarget + delta);
+
+    // Scale sail
+    // scale 1D start -0.922,-0.564,18.267
+    // scale 1D end -10.726,-1.987,9.921
+    
   }
 
   addRoll(impulse) {
@@ -169,44 +170,24 @@ class Player {
   // Fire logic
   loadCannon(side) {
     // no more than 3, and don't load while fuses are lit
-    if (this.ammo[side] < 3 && !this.fuses[side].lit) {
+    if (this.ammo[side] < 3) {
       this.ammo[side] += 1;
     }
   }
 
   lightFuse(side) {
-    // don't light without ammo
-    if (this.ammo[side] > 0 && !this.fuses[side].lit) {
-      this.fuses[side].lit = true;
-      this.fuses[side].time = 0;
-    }
-  }
-
-  updateCannons(dt, side) {
-    const fuse = this.fuses[side];
     const ammo = this.ammo[side];
-    // Player fire logic
-    if (fuse.lit) {
-      fuse.time += dt;
-      if (fuse.time > this.FUSE_MAX) {
-        if (ammo !== 0) {
-          this.fireCannon(
-            side,
-            this.moveSphere.rotation,
-            this.CANNON_POS[ammo - 1]
-          );
-          // hard coded offest btw cannon fire
-          fuse.time = this.FUSE_MAX - 100;
-          // Primitives are not passed by ref so i need to do this here
-          this.ammo[side] -= 1;
+    // don't light without ammo
+    if (ammo > 0) {
+      this.fireCannon(
+        side,
+        this.moveSphere.rotation,
+        this.CANNON_POS[ammo - 1]
+      );
 
-          // maybe cancel the animation to add impact
-          this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
-        } else {
-          // out of ammo, stop firing
-          fuse.lit = false;
-        }
-      }
+      this.ammo[side] -= 1;
+      // maybe cancel the animation to add impact
+      this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
     }
   }
 
@@ -240,10 +221,6 @@ class Player {
     this.getWorldPosition();
 
     this.updateRoll(dt);
-    // Update both sets of cannons
-    this.updateCannons(dt, SHIP_DIRECTIONS.PORT);
-    this.updateCannons(dt, SHIP_DIRECTIONS.STARBOARD);
-
     // always moving forward
     // switch to acceleration and velocity with a max speed
     if (this.velocity >= this.velocityMin && this.turnRate !== 0) {

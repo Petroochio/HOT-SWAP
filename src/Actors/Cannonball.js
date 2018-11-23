@@ -186,7 +186,11 @@ class Cannonball {
       this.updateSmoke(dt);
 
       let move = dt * this.speed;
-      if (this.ownerType === GAME_TYPES.ENEMY) move = dt * this.enemySpeed;
+      if (this.ownerType === GAME_TYPES.ENEMY) {
+        move = dt * this.enemySpeed;
+        this.enemyMesh.rotateZ(dt * 0.005);
+      }
+
 
       // Starting animation that speeds up cannonball when first fired
       if (this.accelCounter > 0) {

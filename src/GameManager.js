@@ -172,12 +172,12 @@ export function init(input$) {
 
     // Load port
     if (e.keyCode === 38) {
-      player.setSailSpeed(0.000001);
+      player.setSailSpeed(0.00001);
     }
 
     // Load starboard
     if (e.keyCode === 40) {
-      player.setSailSpeed(-0.000001);
+      player.setSailSpeed(-0.00001);
     }
   };
 

@@ -54,22 +54,7 @@ class Player {
       shininess: 100,
       reflectivity: 0,
     });
-    // sailMat.specular = ;
-    // getModel('./Assets/pirate/pirate_frontsail.stl')
-    //   .then((geo) => {
-    //     this.frontSail = new THREE.Mesh(geo, sailMat);
-    //     this.frontSail.position.x = 2.07; // hard coded from model file
-    //     this.frontSail.position.y = 18.80;
-    //     this.ship.add(this.frontSail);
-    //   });
 
-    // getModel('./Assets/pirate/pirate_backsail.stl')
-    //   .then((geo) => {
-    //     this.backSail = new THREE.Mesh(geo, sailMat);
-    //     this.backSail.position.x = 2.16; // hard coded from model file
-    //     this.backSail.position.y = 7.29;
-    //     this.ship.add(this.backSail);
-    //   });
     // Front Sail
     const frontSailGeo = new THREE.Geometry();
     frontSailGeo.vertices.push(
@@ -88,15 +73,25 @@ class Player {
     this.frontSail.position.x = 2.07; // hard coded from model file
     this.frontSail.position.y = 18.80;
     this.ship.add(this.frontSail);
-    // -5.67, -3.47, 22.56
-    // 5.67, 3.47, 8.06
-    // -10.33, 0, 17.21
-    // -9.30, -1.72, 9.10
-    // back sail
-    // -6.55, -4.00, 25.46
-    // 6.55, 4.00, 8.72
-    // -11.92, 0, 19.27
-    // -10.73, -1.99, 9.92
+
+    // Back Sail
+    const backSailGeo = new THREE.Geometry();
+    backSailGeo.vertices.push(
+      new THREE.Vector3(-6.55, -4.00, 25.46),
+      new THREE.Vector3(6.55, 4.00, 8.72),
+      new THREE.Vector3(-11.92, 0, 19.27),
+      new THREE.Vector3(-10.73, -1.99, 9.92),
+    );
+    backSailGeo.faces.push(
+      new THREE.Face3(0, 1, 2),
+      new THREE.Face3(3, 1, 2),
+    );
+    backSailGeo.computeFaceNormals();
+
+    this.backSail = new THREE.Mesh(backSailGeo, sailMat);
+    this.backSail.position.x = 2.16; // hard coded from model file
+    this.backSail.position.y = 7.29;
+    this.ship.add(this.backSail);
 
     getModel('./Assets/pirate/pirate_rudder.stl')
       .then((geo) => {
@@ -185,15 +180,16 @@ class Player {
     this.velocityTarget = clamp(this.velocityMin, this.velocityMax, this.velocityTarget + delta);
 
     // Scale sail
-    // scale 1D start -0.922,-0.564,18.267
-    // scale 1D end -10.726,-1.987,9.921
-    const scaleVec = new THREE.Vector3(-0.922, -0.564, 18.267).sub(new THREE.Vector3(-10.726, -1.987, 9.921));
-    const newFrontVert = new THREE.Vector3(-9.30, -1.72, 9.10);
-    const s = (1 - this.velocityTarget / this.velocityMax);
-    // console.log(newFrontVert.add(scaleVec.multiplyScalar(s)));
-    this.frontSail.geometry.vertices[3] = newFrontVert.add(scaleVec.multiplyScalar(s));
+    const s = (this.velocityTarget / this.velocityMax);
+    this.frontSail.geometry.vertices[3].z = 18 - 9 * s;
+    this.frontSail.geometry.vertices[2].z = 20 - 3 * s;
     this.frontSail.geometry.verticesNeedUpdate = true;
     this.frontSail.geometry.computeFaceNormals();
+
+    this.backSail.geometry.vertices[3].z = 19 - 9 * s;
+    this.backSail.geometry.vertices[2].z = 22 - 3 * s;
+    this.backSail.geometry.verticesNeedUpdate = true;
+    this.backSail.geometry.computeFaceNormals();
   }
 
   addRoll(impulse) {

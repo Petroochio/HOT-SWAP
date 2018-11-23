@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
+import { getModel } from '../AssetManager';
 
 class Cannonball {
   constructor(scene, worldSize) {
@@ -8,6 +9,7 @@ class Cannonball {
     this.scene = scene;
     this.worldSize = worldSize;
     this.speed = 0.07 / worldSize;
+    this.enemySpeed = 0.02 / worldSize;
     this.playerSpeed = 0.04 / worldSize; // Use only when player owner
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
@@ -23,17 +25,28 @@ class Cannonball {
 
     this.flightTime = 0;
     this.maxFlight = 1500;
+    this.enemyMaxFlight = 8000;
     this.smokeTime = 0;
     this.smokeMax = 500;
 
     // maybe scale it up after it fires
-    const ballGeo = new THREE.SphereGeometry(3, 32, 32); // un hardcode these pls
+    const ballGeo = new THREE.SphereGeometry(1, 32, 32); // un hardcode these pls
     const ballMat = new THREE.MeshPhongMaterial({ flatShading: false, color: 0x000000 });
 
     // This game object is just one model, the ball itself
-    this.gameObject = new THREE.Mesh(ballGeo, ballMat);
+    this.gameObject = new THREE.Object3D();
     this.gameObject.position.x = worldSize + 4;
     this.gameObject.visible = false;
+
+    this.playerMesh = new THREE.Mesh(ballGeo, ballMat);
+    this.playerMesh.visible = false;
+    this.gameObject.add(this.playerMesh);
+    getModel('./Assets/enemy/spike.stl')
+      .then((geo) => {
+        this.enemyMesh = new THREE.Mesh(geo, ballMat);
+        this.enemyMesh.visible = false;
+        this.gameObject.add(this.enemyMesh);
+      });
 
     // Fire Smoke
     // maybe scale it up after it fires
@@ -114,6 +127,8 @@ class Cannonball {
 
   enemyFire(enemyRot, startOffset) {
     this.fire(GAME_TYPES.ENEMY);
+    this.enemyMesh.visible = true;
+
     // Set position, then rotate to front of cannon
     this.moveSphere.rotation.set(enemyRot.x, enemyRot.y, enemyRot.z);
     this.moveSphere.rotateOnAxis(this.forwardAxis, startOffset);
@@ -123,6 +138,7 @@ class Cannonball {
   // Fires cannonball as if rom player
   playerFire(side, playerRot, startOffset, cannonOffset) {
     this.fire(GAME_TYPES.PLAYER);
+    this.playerMesh.visible = true;
 
     // Set position, then move to relative position of cannon
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
@@ -147,6 +163,8 @@ class Cannonball {
   hide() {
     this.isActive = false;
     this.gameObject.visible = false;
+    this.playerMesh.visible = false;
+    this.enemyMesh.visible = false;
     this.smoke.visible = false;
     this.flightTime = 0;
   }
@@ -168,6 +186,7 @@ class Cannonball {
       this.updateSmoke(dt);
 
       let move = dt * this.speed;
+      if (this.ownerType === GAME_TYPES.ENEMY) move = dt * this.enemySpeed;
 
       // Starting animation that speeds up cannonball when first fired
       if (this.accelCounter > 0) {
@@ -175,22 +194,23 @@ class Cannonball {
         move *= this.accelCounter / 150;
         move = move < dt * this.speed ? dt * this.speed : move;
 
-        const s = (300 - this.accelCounter) / 270;
+        const s = 3 * (300 - this.accelCounter) / 270;
         this.gameObject.scale.set(s, s, s);
         this.gameObject.position.x = this.worldSize + 4;
       } else {
         // Adds to the flight time and moves the cannon closer to water
         this.flightTime += dt;
         // calc distance from surface of water
-        const dist = (4 * (this.maxFlight - this.flightTime) / this.maxFlight);
+        const max = this.ownerType === GAME_TYPES.ENEMY ? this.enemyMaxFlight : this.maxFlight;
+        const dist = (4 * (max - this.flightTime) / max);
         this.gameObject.position.x = this.worldSize + dist;
 
         // I want it to go below the water so I added an extra buffer here, thats the 500
-        if (this.flightTime > this.maxFlight + 500) {
+        if (this.flightTime > max + 500) {
           this.splash();
         }
 
-        this.gameObject.scale.set(1, 1, 1);
+        this.gameObject.scale.set(3, 3, 3);
       }
 
       // Movement

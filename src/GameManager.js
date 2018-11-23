@@ -169,6 +169,16 @@ export function init(input$) {
     if (e.keyCode === 68) {
       player.loadCannon(SHIP_DIRECTIONS.STARBOARD);
     }
+
+    // Load port
+    if (e.keyCode === 38) {
+      player.setSailSpeed(0.000001);
+    }
+
+    // Load starboard
+    if (e.keyCode === 40) {
+      player.setSailSpeed(-0.000001);
+    }
   };
 
   // Steering

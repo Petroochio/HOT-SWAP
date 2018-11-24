@@ -44,7 +44,7 @@ class EnemyShip {
     this.gameObject.add(this.ship);
 
     // Main body
-    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xaa0000 });
+    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x444444 });
     getModel('./Assets/enemy/enemy_body_v2.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
@@ -52,7 +52,7 @@ class EnemyShip {
       });
 
     // sail
-    const sailMat = new THREE.MeshPhongMaterial({ color: 0xeeeeee, side: THREE.DoubleSide });
+    const sailMat = new THREE.MeshPhongMaterial({ color: 0x111111, side: THREE.DoubleSide });
     getModel('./Assets/enemy/enemy_sail_v2.stl')
       .then((geo) => {
         this.sail = new THREE.Mesh(geo, sailMat);
@@ -61,7 +61,7 @@ class EnemyShip {
       });
 
     // cannon
-    const cannonMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const cannonMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
     getModel('./Assets/enemy/enemy_cannon.stl')
       .then((geo) => {
         this.cannon = new THREE.Mesh(geo, cannonMat);

@@ -33,7 +33,7 @@ class Cannonball {
 
     // maybe scale it up after it fires
     const ballGeo = new THREE.SphereGeometry(1, 32, 32); // un hardcode these pls
-    const ballMat = new THREE.MeshPhongMaterial({ flatShading: false, color: 0x000000 });
+    const ballMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xFFFFFF });
 
     // This game object is just one model, the ball itself
     this.gameObject = new THREE.Object3D();

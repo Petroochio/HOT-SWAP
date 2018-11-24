@@ -39,7 +39,7 @@ class Player {
     this.gameObject.add(this.ship);
 
     // this mat might need to change
-    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0xD69136 });
+    const bodyMat = new THREE.MeshLambertMaterial({ flatShading: true, color: 0xBBBBBB });
     getModel('./Assets/pirate/pirate_body.stl')
       .then((geo) => {
         this.body = new THREE.Mesh(geo, bodyMat);
@@ -48,7 +48,7 @@ class Player {
     const specular = new THREE.Color(0xffffff);
     // Sails
     const sailMat = new THREE.MeshLambertMaterial({
-      color: 0xffffff,
+      color: 0xFAFAFA,
       side: THREE.DoubleSide,
       // specular,
       shininess: 100,
@@ -104,8 +104,7 @@ class Player {
     // values are hard coded from models
     this.portCannons = [[-2.49, 3.86, 0], [-3.49, 10.95, 0], [-2.49, 18.05, 0]];
     this.starboardCannons = [[2.49, 3.86, 0], [3.49, 10.95, 0], [2.49, 18.05, 0]];
-    this.cannonLoadedMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    this.cannonMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+    this.cannonMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
     this.cannonOutlineMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffffff });
     getModel('./Assets/pirate/pirate_cannon.stl')
       .then((geo) => {
@@ -164,14 +163,19 @@ class Player {
     this.camera.rotateX(0.9);
 
     // Why am I setting lights on the player? so what you look at is illuminated nice
-    const light = new THREE.PointLight(0xffffff, 0.5, 200000);
-    // const light2 = new THREE.PointLight(0xffffff, 0.5, 200);
-    const ambient = new THREE.AmbientLight(0x505050);
+    const light = new THREE.PointLight(0xFFFFFF, 0.2, 2000000);
+    const light2 = new THREE.PointLight(0x000000, 0.5, 2000000);
+    const point = new THREE.PointLight(0xFFEEEE, 0.8, 2000000);
+    const ambient = new THREE.AmbientLight(0x222222);
+
     this.gameObject.add(light);
-    // this.gameObject.add(light2);
+    this.gameObject.add(light2);
+    this.gameObject.add(point);
     this.gameObject.add(ambient);
-    light.position.set(0, -40, 100);
-    // light2.position.set(0, 2, 30);
+
+    light.position.set(0, 200, 200);
+    light2.position.set(0, -200, 200);
+    point.position.set(0, -10, 200);
 
     // Avoid gimble lock with rotation spheres
     this.moveSphere = new THREE.Object3D();
@@ -274,6 +278,8 @@ class Player {
         this.rollSpeed += this.rollAcc;
         this.rollSpeed *= 0.98;
         this.rollOffset += this.rollSpeed;
+        // console.log(this.rollOffset);
+        this.rollOffset = clamp(-0.17, 0.17, this.rollOffset);
         this.ship.rotation.y = this.rollOffset + this.turnRollOffset;
       }
     }

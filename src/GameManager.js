@@ -65,17 +65,17 @@ const firePlayerCannon = (side, rotation, position) => {
 const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon);
 
 // init renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setClearColor(0x000033, 1);
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setClearColor(0x666666, 0);
 renderer.setPixelRatio(window.devicePixelRatio);
 
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights, except for player point light
-const worldTex = new THREE.TextureLoader().load('./Assets/world.png');
-const worldMat = new THREE.MeshPhongMaterial({ map: worldTex, flatShading: true });
-worldTex.wrapS = THREE.RepeatWrapping;
-worldTex.wrapT = THREE.RepeatWrapping;
-worldTex.repeat.set(4, 4);
+// const worldTex = new THREE.TextureLoader().load('./Assets/world.png'); //0x5599AA
+const worldMat = new THREE.MeshLambertMaterial({ color: 0x5599AA, flatShading: true });
+// worldTex.wrapS = THREE.RepeatWrapping;
+// worldTex.wrapT = THREE.RepeatWrapping;
+// worldTex.repeat.set(4, 4);
 let world;
 getModel('./Assets/world.stl')
   .then((geo) => {
@@ -182,6 +182,15 @@ export function init(input$) {
     // Load starboard
     if (e.keyCode === 40) {
       player.setSailSpeed(-0.00001);
+    }
+
+    if (e.keyCode === 37) {
+      player.setTurnAngle(0.00005);
+    }
+
+    // Load starboard
+    if (e.keyCode === 39) {
+      player.setTurnAngle(-0.00005);
     }
   };
 

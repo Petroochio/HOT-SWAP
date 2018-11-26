@@ -104,6 +104,11 @@ function checkCollisions() {
             c.explode();
           }
         });
+      } else if (c.ownerType === GAME_TYPES.ENEMY) {
+        if (player.getHit(c.getPosition())) {
+          c.explode();
+          player.addFlame(10);
+        }
       }
       // check player hit here
       // should also map over enemies to intersect player
@@ -119,7 +124,7 @@ function update(currentTime) {
 
   player.update(dt);
   cannonballPool.forEach(c => c.update(dt));
-  enemyPool.forEach(e => e.update(dt, player.worldPos));
+  enemyPool.forEach(e => e.update(dt, player.getPosition()));
 
   checkCollisions();
 
@@ -191,6 +196,10 @@ export function init(input$) {
     // Load starboard
     if (e.keyCode === 39) {
       player.setTurnAngle(-0.00005);
+    }
+
+    if (e.keyCode === 70) {
+      player.calmFire(600);
     }
   };
 

@@ -9,7 +9,7 @@ class Cannonball {
     this.scene = scene;
     this.worldSize = worldSize;
     this.speed = 0.07 / worldSize;
-    this.enemySpeed = 0.02 / worldSize;
+    this.enemySpeed = 0.03 / worldSize;
     this.playerSpeed = 0.04 / worldSize; // Use only when player owner
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
@@ -34,6 +34,7 @@ class Cannonball {
     // maybe scale it up after it fires
     const ballGeo = new THREE.SphereGeometry(1, 32, 32); // un hardcode these pls
     const ballMat = new THREE.MeshBasicMaterial({ flatShading: true, color: 0xFFFFFF });
+    const enemyMat = new THREE.MeshLambertMaterial({ flatShading: true, color: 0x111111 });
 
     // This game object is just one model, the ball itself
     this.gameObject = new THREE.Object3D();
@@ -45,7 +46,7 @@ class Cannonball {
     this.gameObject.add(this.playerMesh);
     getModel('./Assets/enemy/spike.stl')
       .then((geo) => {
-        this.enemyMesh = new THREE.Mesh(geo, ballMat);
+        this.enemyMesh = new THREE.Mesh(geo, enemyMat);
         this.enemyMesh.visible = false;
         this.gameObject.add(this.enemyMesh);
       });
@@ -116,7 +117,6 @@ class Cannonball {
   }
 
   updateSmoke(dt) {
-    
     // move smoke puffs
     if (this.smokeTime < this.smokeMax) {
       this.smokeTime += dt;
@@ -229,7 +229,7 @@ class Cannonball {
       if (this.ownerType === GAME_TYPES.PLAYER) {
         this.moveSphere.rotateOnAxis(this.playerAxis, dt * this.playerSpeed);
       } else if (this.ownerType === GAME_TYPES.ENEMY) {
-        this.moveSphere.rotateOnAxis(this.yawAxis, dt * this.angularV);
+        // this.moveSphere.rotateOnAxis(this.yawAxis, dt * this.angularV);
       }
       this.updateWorldPos();
     }

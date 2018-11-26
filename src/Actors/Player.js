@@ -7,6 +7,7 @@ import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 // or since it's memoized just do a preload somewhere
 import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
+import Flame from './Flame';
 
 class Player {
   constructor(scene, camera, worldSize, fireCannon) {
@@ -20,7 +21,7 @@ class Player {
     this.acceleration = 0.0000001;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
-    this.worldPos = new THREE.Vector3(); // stores world location
+    this.worldPos = new THREE.Vector3(0, 0, 0); // stores world location
 
     this.rollOffset = 0;
     this.turnRollOffset = 0;
@@ -145,7 +146,33 @@ class Player {
         });
       });
 
-    // Fire logic
+    // Hitbox stuff
+    const hitgeo = new THREE.SphereGeometry(7, 10, 10);
+    this.hitboxes = [
+      new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+    ];
+
+    this.hitPositions = [
+      new THREE.Vector3(0, 5, 8),
+      new THREE.Vector3(0, -7, 8),
+      new THREE.Vector3(0, 17, 8),
+    ];
+
+    this.hitboxes[0].position.copy(this.hitPositions[0]);
+    // just replace this array with positions
+    this.hitboxes.forEach((h, i) => {
+      h.position.copy(this.hitPositions[i]);
+      // this shows hitboxes
+      h.visible = false;
+      this.gameObject.add(h);
+    });
+
+    // Fire Cannon logic
     this.fireCannon = fireCannon; // passed in to use cannon pool
     // names for these need to match the constants
     this.ammo = { PORT: 0, STARBOARD: 0 };
@@ -153,6 +180,14 @@ class Player {
     // [back, mid, front]
     this.CANNON_POS = [0, 0.025, 0.05];
     this.FIRE_ROLL_AMOUNT = { PORT: 0.007, STARBOARD: -0.007 };
+
+    // Health stuff, AKA other fire
+    this.onFire = false;
+    this.fireTime = 0;
+    this.fireMax = 15000;
+    this.flames = [
+      new Flame(this.gameObject, new THREE.Vector3(0, 5, 8), 10),
+    ];
 
     // Set camera to follow player nice, values set manually
     // consider camera class if it needs any functionality
@@ -180,15 +215,36 @@ class Player {
     // Avoid gimble lock with rotation spheres
     this.moveSphere = new THREE.Object3D();
     this.moveSphere.add(this.gameObject);
+    this.gameObject.position.x = worldSize - 4;
 
     // Add top level obj to scene
     scene.add(this.moveSphere);
   }
 
-  // Used for collisions and player tracking on enemies
-  getWorldPosition() {
+  updateWorldPosition() {
     this.gameObject.getWorldPosition(this.worldPos);
-    return this.worldPos;
+  }
+
+  // Used for collisions and player tracking on enemies
+  getPosition() {
+    return this.worldPos.clone();
+  }
+
+  getHit(ballPos) {
+    let isHit = false;
+
+    this.hitboxes.forEach((b) => {
+      // get this hitbox world position
+      const worldP = new THREE.Vector3();
+      b.getWorldPosition(worldP);
+
+      if (worldP.distanceTo(ballPos) < 10) {
+        console.log('hit!');
+        isHit = true;
+      }
+    });
+
+    return isHit;
   }
 
   setTurnAngle(angle) {
@@ -285,12 +341,46 @@ class Player {
     }
   }
 
+  addFlame(amount) {
+    if (this.onFire) {
+      // add more fire
+      this.fireTime += amount;
+      this.flames.forEach(f => f.addFlame(amount));
+    } else {
+      this.onFire = true;
+      this.fireTime = 0;
+      this.flames.forEach(f => f.burn(0));
+    }
+  }
+
+  calmFire(amount) {
+    if (this.onFire) {
+      this.fireTime -= amount;
+      this.flames.forEach(f => f.calm(amount));
+
+      if (this.fireTime <= 0) {
+        this.fireTime = 0;
+        this.onFire = false;
+        this.flames.forEach(f => f.hide());
+      }
+    }
+  }
+
+  updateFlames(dt) {
+    if (this.onFire) {
+      this.fireTime += dt;
+      this.flames.forEach(f => f.update(dt));
+    }
+
+    if (this.onFire && this.fireTime >= this.fireMax) {
+      // trigger game over here
+    }
+  }
+
   // Central update
   update(dt) {
-    // Set this once a frame so that enemies can use it
-    this.getWorldPosition();
-
     this.updateRoll(dt);
+    this.updateFlames(dt);
     // always moving forward
     // switch to acceleration and velocity with a max speed
     if (this.velocity >= this.velocityMin && this.turnRate !== 0) {
@@ -306,6 +396,8 @@ class Player {
 
     // apply rotspeed to move sphere based on forward
     this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.velocity);
+    // Set this once a frame so that enemies can use it
+    this.updateWorldPosition();
   }
 }
 

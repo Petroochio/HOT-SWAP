@@ -184,9 +184,9 @@ class Player {
     // Health stuff, AKA other fire
     this.onFire = false;
     this.fireTime = 0;
-    this.fireMax = 15000;
+    this.fireMax = 20000;
     this.flames = [
-      new Flame(this.gameObject, new THREE.Vector3(0, 5, 8), 10),
+      new Flame(this.gameObject, new THREE.Vector3(0, -5, 7), this.fireMax),
     ];
 
     // Set camera to follow player nice, values set manually
@@ -239,7 +239,6 @@ class Player {
       b.getWorldPosition(worldP);
 
       if (worldP.distanceTo(ballPos) < 10) {
-        console.log('hit!');
         isHit = true;
       }
     });
@@ -349,7 +348,7 @@ class Player {
     } else {
       this.onFire = true;
       this.fireTime = 0;
-      this.flames.forEach(f => f.burn(0));
+      this.flames.forEach(f => f.burn(3000));
     }
   }
 
@@ -381,6 +380,7 @@ class Player {
   update(dt) {
     this.updateRoll(dt);
     this.updateFlames(dt);
+
     // always moving forward
     // switch to acceleration and velocity with a max speed
     if (this.velocity >= this.velocityMin && this.turnRate !== 0) {

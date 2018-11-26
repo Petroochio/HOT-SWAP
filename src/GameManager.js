@@ -107,7 +107,7 @@ function checkCollisions() {
       } else if (c.ownerType === GAME_TYPES.ENEMY) {
         if (player.getHit(c.getPosition())) {
           c.explode();
-          player.addFlame(10);
+          player.addFlame(1000);
         }
       }
       // check player hit here
@@ -199,7 +199,7 @@ export function init(input$) {
     }
 
     if (e.keyCode === 70) {
-      player.calmFire(600);
+      player.calmFire(1000);
     }
   };
 

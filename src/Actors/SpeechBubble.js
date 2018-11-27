@@ -5,7 +5,7 @@ const texLoader = new THREE.TextureLoader();
 export const SPRITES = {
   PORT: {
     SAIL: texLoader.load('./Assets/SpeechBubbles/sb_l_crank.png'),
-    FIRE: texLoader.load('./Assets/SpeechBubbles/sb_l_fire.png'),
+    FLAME: texLoader.load('./Assets/SpeechBubbles/sb_l_fire.png'),
     HATCH: texLoader.load('./Assets/SpeechBubbles/sb_l_load.png'),
     NO_AMMO: texLoader.load('./Assets/SpeechBubbles/sb_l_no.png'),
     RUDDER: texLoader.load('./Assets/SpeechBubbles/sb_l_wheel.png'),
@@ -14,7 +14,7 @@ export const SPRITES = {
 
   STARBOARD: {
     SAIL: texLoader.load('./Assets/SpeechBubbles/sb_r_crank.png'),
-    FIRE: texLoader.load('./Assets/SpeechBubbles/sb_r_fire.png'),
+    FLAME: texLoader.load('./Assets/SpeechBubbles/sb_r_fire.png'),
     HATCH: texLoader.load('./Assets/SpeechBubbles/sb_r_load.png'),
     NO_AMMO: texLoader.load('./Assets/SpeechBubbles/sb_r_no.png'),
     RUDDER: texLoader.load('./Assets/SpeechBubbles/sb_r_wheel.png'),

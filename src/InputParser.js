@@ -11,6 +11,7 @@ const isSail = data => (data[1] > 320 && data[1] < 330);
 const isRudder = data => (data[1] > 177 && data[1] < 187);
 const isHatch = data => (data[1] > 508 && data[1] < 518);
 const isWick = data => (data[1] > 399 && data[1] < 409);
+const isFlame = data => (data[1] > 700 && data[1] < 704);
 
 // all of the ids are hardcoded, we should create a function check and look at
 // a file elseware
@@ -76,6 +77,13 @@ export function getWick(input$) {
     .map(data => ({ id: data[0], isLit: data[2] > 575 }));
 }
 
+export function getFlame(input$) {
+  return input$
+    .map(find(isFlame))
+    .filter(notNil)
+    .map(data => ({ id: data[0], isPressed: data[2] > 800 }));
+}
+
 function getInputChange(input$, idFunc, type) {
   return input$
     .map(find(idFunc))
@@ -97,6 +105,7 @@ export function getAllInputSwap(input$) {
     getInputChange(input$, isSail, INPUT_TYPES.SAIL),
     getInputChange(input$, isRudder, INPUT_TYPES.RUDDER),
     getInputChange(input$, isHatch, INPUT_TYPES.HATCH),
-    getInputChange(input$, isWick, INPUT_TYPES.WICK)
+    getInputChange(input$, isWick, INPUT_TYPES.WICK),
+    getInputChange(input$, isFlame, INPUT_TYPES.FLAME)
   );
 }

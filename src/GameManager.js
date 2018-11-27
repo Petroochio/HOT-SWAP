@@ -7,7 +7,7 @@ import { getModel } from './AssetManager';
 import EnemyShip from './Actors/EnemyShip';
 import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
 import {
-  getHatch, getWick, getRudderKnob, getSailKnob, getAllInputSwap
+  getHatch, getWick, getRudderKnob, getSailKnob, getAllInputSwap, getFlame
 } from './InputParser';
 
 let prevTime = 0;
@@ -277,6 +277,19 @@ export function init(input$) {
       complete: console.log,
     });
 
+  // Put fire out
+  getFlame(input$)
+    .fold((acc, curr) => ({
+      prev: curr.isPressed,
+      output: (!acc.prev && curr.isPressed),
+    }), { prev: false })
+    .filter(data => data.output)
+    .subscribe({
+      next: () => player.calmFire(1500),
+      error: console.log,
+      complete: console.log,
+    });
+
   // Used to trigger speech bubbles
   getAllInputSwap(input$)
     .map(([sideId, type]) =>[
@@ -284,7 +297,6 @@ export function init(input$) {
       type,
     ])
     .subscribe({
-      // next: console.log,
       next: ([side, type]) => player.triggerBubble(side, type),
       error: console.log,
       complete: console.log,

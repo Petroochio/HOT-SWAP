@@ -15,7 +15,10 @@ class Flame {
     this.particles = Array.from(
       { length: 30 },
       () => ({
-        mesh: new THREE.Mesh(this.particleGeo, new THREE.MeshBasicMaterial({ color: 0xF00000, transparent: true })),
+        mesh: new THREE.Mesh(
+          this.particleGeo,
+          new THREE.MeshBasicMaterial({ color: 0xF00000, transparent: true })
+        ),
         forward: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 5 + 4),
         initialPos: Math.random() * 900,
       })

@@ -23,6 +23,14 @@ export const GAME_TYPES = {
   CANNONBALL: 'CANNONBALL',
 };
 
+export const INPUT_TYPES = {
+  WICK: 'WICK',
+  HATCH: 'HATCH',
+  SAIL: 'SAIL',
+  RUDDER: 'RUDDER',
+  FIRE: 'FIRE',
+};
+
 export const SHIP_DIRECTIONS = {
   PORT: 'PORT',
   STARBOARD: 'STARBOARD',

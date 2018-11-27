@@ -8,6 +8,8 @@ import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
 import Flame from './Flame';
+import SpeechBubble, { SPRITES } from './SpeechBubble';
+
 
 class Player {
   constructor(scene, camera, worldSize, fireCannon) {
@@ -189,6 +191,19 @@ class Player {
       new Flame(this.gameObject, new THREE.Vector3(0, -5, 7), this.fireMax),
     ];
 
+    // Speech Bubbles
+    this.speechBubbles = {
+      PORT: [
+        new SpeechBubble(this.gameObject, new THREE.Vector3(-10, 17, 6), new THREE.Vector3(-10, 0, 9), 0),
+        new SpeechBubble(this.gameObject, new THREE.Vector3(-12, 1, 6), new THREE.Vector3(-10, 0, 9), Math.PI / 18),
+      ],
+
+      STARBOARD: [
+        new SpeechBubble(this.gameObject, new THREE.Vector3(10, 17, 6), new THREE.Vector3(10, 0, 9), 0),
+        new SpeechBubble(this.gameObject, new THREE.Vector3(12, 1, 6), new THREE.Vector3(10, 0, 9), -Math.PI / 18),
+      ],
+    };
+
     // Set camera to follow player nice, values set manually
     // consider camera class if it needs any functionality
     this.camera = camera;
@@ -296,6 +311,24 @@ class Player {
     this.updateCannonOutlines();
   }
 
+  triggerBubble(side, sprite) {
+    // Show ammo empty bubble
+    const bubble0 = this.speechBubbles[side][0];
+    const bubble1 = this.speechBubbles[side][1];
+
+    // sloppy logic for choosing which bubble
+    if (!bubble0.active) {
+      console.log(sprite, SPRITES[side][sprite]);
+      bubble0.setSprite(SPRITES[side][sprite]);
+    } else if (!bubble1.active) {
+      bubble1.setSprite(SPRITES[side][sprite]);
+    } else if (bubble0.activeTime > bubble1.activeTime) {
+      bubble0.setSprite(SPRITES[side][sprite]);
+    } else {
+      bubble1.setSprite(SPRITES[side][sprite]);
+    }
+  }
+
   lightFuse(side) {
     const ammo = this.ammo[side];
     // don't light without ammo
@@ -309,6 +342,8 @@ class Player {
       this.ammo[side] -= 1;
       // maybe cancel the animation to add impact
       this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
+    } else {
+      this.triggerBubble(side, 'NO_AMMO');
     }
 
     this.updateCannonOutlines();
@@ -376,10 +411,16 @@ class Player {
     }
   }
 
+  updateBubbles(dt) {
+    this.speechBubbles.PORT.forEach(s => s.update(dt));
+    this.speechBubbles.STARBOARD.forEach(s => s.update(dt));
+  }
+
   // Central update
   update(dt) {
     this.updateRoll(dt);
     this.updateFlames(dt);
+    this.updateBubbles(dt);
 
     // always moving forward
     // switch to acceleration and velocity with a max speed

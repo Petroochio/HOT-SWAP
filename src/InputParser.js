@@ -1,8 +1,16 @@
 import {
   __, add, append, divide, find, isNil, not, reduce, pipe, takeLast, zipWith
 } from 'ramda';
+import xs from 'xstream';
+
+import { INPUT_TYPES } from './Constants';
 
 const notNil = pipe(isNil, not);
+
+const isSail = data => (data[1] > 320 && data[1] < 330);
+const isRudder = data => (data[1] > 177 && data[1] < 187);
+const isHatch = data => (data[1] > 508 && data[1] < 518);
+const isWick = data => (data[1] > 399 && data[1] < 409);
 
 // all of the ids are hardcoded, we should create a function check and look at
 // a file elseware
@@ -39,7 +47,7 @@ function parseKnobData(input$) {
 const sailCal = [511, 509];
 export function getSailKnob(input$) {
   const sail$ = input$
-    .map(find(data => data[1] > 320 && data[1] < 330))
+    .map(find(isSail))
     .filter(notNil)
     .map(data => [data[0], data[2] - sailCal[0], data[3] - sailCal[1]]);
   return parseKnobData(sail$);
@@ -48,7 +56,7 @@ export function getSailKnob(input$) {
 const rudderCal = [514, 511];
 export function getRudderKnob(input$) {
   const rudder$ = input$
-    .map(find(data => data[1] > 177 && data[1] < 187))
+    .map(find(isRudder))
     .filter(notNil)
     .map(data => [data[0], data[2] - rudderCal[0], data[3] - rudderCal[1]]);
   return parseKnobData(rudder$);
@@ -56,14 +64,39 @@ export function getRudderKnob(input$) {
 
 export function getHatch(input$) {
   return input$
-    .map(find(data => data[1] > 508 && data[1] < 518))
+    .map(find(isHatch))
     .filter(notNil)
     .map(data => ({ id: data[0], isOpen: data[2] > 450 }));
 }
 
 export function getWick(input$) {
   return input$
-    .map(find(data => data[1] > 399 && data[1] < 409))
+    .map(find(isWick))
     .filter(notNil)
     .map(data => ({ id: data[0], isLit: data[2] > 575 }));
+}
+
+function getInputChange(input$, idFunc, type) {
+  return input$
+    .map(find(idFunc))
+    .fold(
+      (acc, curr) => ({
+        prev: curr,
+        val: (notNil(curr) && isNil(acc.prev) ? [curr[0], type] : undefined),
+      }),
+      { prev: undefined, val: undefined }
+    )
+    .filter(data => notNil(data.val))
+    .map(data => data.val);
+}
+
+
+export function getAllInputSwap(input$) {
+  return xs.merge(
+    // DO FIRE INPUT
+    getInputChange(input$, isSail, INPUT_TYPES.SAIL),
+    getInputChange(input$, isRudder, INPUT_TYPES.RUDDER),
+    getInputChange(input$, isHatch, INPUT_TYPES.HATCH),
+    getInputChange(input$, isWick, INPUT_TYPES.WICK)
+  );
 }

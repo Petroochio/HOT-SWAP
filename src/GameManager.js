@@ -7,7 +7,7 @@ import { getModel } from './AssetManager';
 import EnemyShip from './Actors/EnemyShip';
 import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
 import {
-  getHatch, getWick, getRudderKnob, getSailKnob
+  getHatch, getWick, getRudderKnob, getSailKnob, getAllInputSwap
 } from './InputParser';
 
 let prevTime = 0;
@@ -273,6 +273,19 @@ export function init(input$) {
     .map(({ id }) => (id === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD))
     .subscribe({
       next: direction => player.lightFuse(direction),
+      error: console.log,
+      complete: console.log,
+    });
+
+  // Used to trigger speech bubbles
+  getAllInputSwap(input$)
+    .map(([sideId, type]) =>[
+      sideId === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD,
+      type,
+    ])
+    .subscribe({
+      // next: console.log,
+      next: ([side, type]) => player.triggerBubble(side, type),
       error: console.log,
       complete: console.log,
     });

@@ -24,6 +24,7 @@ class Player {
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
     this.worldPos = new THREE.Vector3(0, 0, 0); // stores world location
+    this.TURN_MAX = 0.0004;
 
     this.rollOffset = 0;
     this.turnRollOffset = 0;
@@ -262,7 +263,7 @@ class Player {
   }
 
   setTurnAngle(angle) {
-    this.turnRate = clamp(-0.0005, 0.0005, this.turnRate + angle);
+    this.turnRate = clamp(-this.TURN_MAX, this.TURN_MAX, this.turnRate + angle);
     this.rudder.rotation.z = -this.turnRate * 1000;
     // tween this
     // and add a roll
@@ -333,13 +334,16 @@ class Player {
     const ammo = this.ammo[side];
     // don't light without ammo
     if (ammo > 0) {
-      this.fireCannon(
-        side,
-        this.moveSphere.rotation,
-        this.CANNON_POS[ammo - 1]
-      );
+      // Filthy gosh darn for loop
+      for (let i = 0; i < ammo; i += 1) {
+        this.fireCannon(
+          side,
+          this.moveSphere.rotation,
+          this.CANNON_POS[i]
+        );
+      }
 
-      this.ammo[side] -= 1;
+      this.ammo[side] = 0;
       // maybe cancel the animation to add impact
       this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
     } else {

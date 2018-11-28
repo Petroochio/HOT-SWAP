@@ -44,20 +44,23 @@ class Flame {
     this.time += amount;
   }
 
+  triggerFlash() {
+    this.flashTime = 0;
+    this.isFlashing = true;
+  }
+
   calm(amount) {
     this.time -= amount;
+    this.triggerFlash();
   }
 
   burn(startTime) {
     this.time = startTime;
     this.gameObject.visible = true;
-    console.log('burn');
   }
 
   updateParticles() {
-    // console.log(this.particles);
     this.particles.forEach((p) => {
-      // p.mesh.position.add(p.forward);
       const pos = p.forward.clone();
       const s = ((p.initialPos + this.time) % 1000) / 1000;
 
@@ -72,12 +75,30 @@ class Flame {
 
       p.mesh.material.color.r = 1 - s + 0.3;
       p.mesh.material.color.g = (1 - s) * 0.5;
+      p.mesh.material.color.b = 0;
       p.mesh.material.opacity = (1 - s) * 0.4;
     });
   }
 
+  updateFlash(dt) {
+    if (this.isFlashing) {
+      this.flashTime += dt;
+      if (this.flashTime < 40) {
+        this.particles.forEach((p) => {
+          p.mesh.material.opacity += 0.3;
+          p.mesh.material.color.r += 0.3;
+          p.mesh.material.color.g += 0.3;
+          p.mesh.material.color.b += 0.3;
+        });
+      } else {
+        this.isFlashing = false;
+      }
+    }
+  }
+
   update(dt) {
     this.updateParticles(dt);
+    this.updateFlash(dt);
 
     this.time += dt;
     const s = this.time > this.maxTime ? (this.maxTime + 600) * this.growthRate : (this.time + 600) * this.growthRate;

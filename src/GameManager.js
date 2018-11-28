@@ -9,6 +9,7 @@ import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
 import {
   getHatch, getWick, getRudderKnob, getSailKnob, getAllInputSwap, getFlame
 } from './InputParser';
+import { ENGINE_METHOD_PKEY_ASN1_METHS } from 'constants';
 
 let prevTime = 0;
 let totalTime = 0;
@@ -96,7 +97,7 @@ getModel('./Assets/world.stl')
 function spawnEnemy() {
   if (canSpawn) {
     enemySpawnTimer = 0;
-    const enemy = enemyPool.find(e => !e.isActive);
+    const enemy = enemyPool.find(e => !e.isActive && !e.isDying);
     // Hard cap is in the enemy pool rn ~50
     if (enemy) enemy.spawn(player.moveSphere.rotation);
   }
@@ -121,15 +122,31 @@ function checkCollisions() {
           }
         });
       } else if (c.ownerType === GAME_TYPES.ENEMY) {
-        if (player.getHit(c.getPosition())) {
+        if (player.getHit(c.getPosition(), c.hitRadius)) {
           c.explode();
           player.addFlame(1000);
           startShake();
         }
       }
-      // check player hit here
-      // should also map over enemies to intersect player
     }
+
+    // should also map over enemies to intersect player and each other
+    enemyPool.forEach((e1) => {
+      if (e1.isActive) {
+        enemyPool.forEach((e2) => {
+          if (e2.isActive && e2.id !== e1.id && e1.calcHit(e2.getPosition(), e2.hitRadius)) {
+            e1.die();
+            e2.die();
+          }
+        });
+
+        if (player.getHit(e1.getPosition(), e1.hitRadius)) {
+          e1.die();
+          player.addFlame(1000);
+          startShake();
+        }
+      }
+    });
   });
 }
 

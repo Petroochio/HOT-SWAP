@@ -21,6 +21,11 @@ class EnemyShip {
     this.restingPos = this.worldSize - 2;
     this.headingRotation = 0;
 
+    this.isDying = false;
+    this.deathTime = 0;
+    this.DEATH_TIME_MAX = 1000;
+    this.deathRollDir = 0;
+
     this.pitchSpawnOffset = 0;
     this.pitchOffset = 0;
     this.pitchSpeed = 0;
@@ -43,28 +48,29 @@ class EnemyShip {
     this.ship = new THREE.Object3D();
     this.gameObject.add(this.ship);
 
+    this.flashMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
     // Main body
-    const bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x444444 });
+    this.bodyMat = new THREE.MeshPhongMaterial({ flatShading: true, color: 0x444444 });
     getModel('./Assets/enemy/enemy_body_v2.stl')
       .then((geo) => {
-        this.body = new THREE.Mesh(geo, bodyMat);
+        this.body = new THREE.Mesh(geo, this.bodyMat);
         this.ship.add(this.body);
       });
 
     // sail
-    const sailMat = new THREE.MeshPhongMaterial({ color: 0x111111, side: THREE.DoubleSide });
+    this.sailMat = new THREE.MeshPhongMaterial({ color: 0x111111, side: THREE.DoubleSide });
     getModel('./Assets/enemy/enemy_sail_v2.stl')
       .then((geo) => {
-        this.sail = new THREE.Mesh(geo, sailMat);
+        this.sail = new THREE.Mesh(geo, this.sailMat);
         this.sail.position.y = 14.46; // hardcoded from model
         this.ship.add(this.sail);
       });
 
     // cannon
-    const cannonMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+    this.cannonMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
     getModel('./Assets/enemy/enemy_cannon.stl')
       .then((geo) => {
-        this.cannon = new THREE.Mesh(geo, cannonMat);
+        this.cannon = new THREE.Mesh(geo, this.cannonMat);
         this.cannon.position.y = 23.99; // hardcoded from model
         this.ship.add(this.cannon);
       });
@@ -84,10 +90,18 @@ class EnemyShip {
     this.moveSphere.add(this.forwardMarker);
     this.scene.add(this.moveSphere);
     this.gameObject.visible = false;
+    this.id = this.gameObject.id;// for collisions!
+  }
+
+  updateWorldPos() {
+    this.hitTarget.getWorldPosition(this.hitPos);
+  }
+
+  getPosition() {
+    return this.hitPos;
   }
 
   calcHit(position, d) {
-    this.hitTarget.getWorldPosition(this.hitPos);
     return this.hitPos.distanceTo(position) < d + this.hitRadius;
   }
 
@@ -115,8 +129,27 @@ class EnemyShip {
   die() {
     // trigger death animation
     this.isActive = false;
+    this.isDying = true;
+    this.deathTime = 0;
+    this.deathRollDir = Math.random() > 0.5 ? 1 : -1;
+  }
+
+  showFlash() {
+    this.body.material = this.flashMat;
+    this.sail.material = this.flashMat;
+    this.cannon.material = this.flashMat;
+  }
+
+  stopFlash() {
+    this.body.material = this.bodyMat;
+    this.sail.material = this.sailMat;
+    this.cannon.material = this.cannonMat;
+  }
+
+  hide() {
     this.floatPos = -20;
     this.gameObject.visible = false;
+    this.stopFlash();
   }
 
   addPitch(impulse) {
@@ -173,6 +206,7 @@ class EnemyShip {
 
   update(dt, playerPos) {
     if (this.isActive) {
+      this.updateWorldPos();
       this.updatePitch(dt);
       this.updateFloat(dt);
       this.updateHeading(dt, playerPos);
@@ -188,6 +222,23 @@ class EnemyShip {
         this.fireCannon(this.moveSphere.rotation, this.headingRotation * 0.0003);
         this.addPitch(0.006);
       }
+    } else if (this.isDying) {
+      this.deathTime += dt;
+      // white flash
+      if (this.deathTime < 40) {
+        this.showFlash();
+      } else {
+        this.stopFlash();
+
+        // roll over
+
+        // float
+        const sinkPos = -(this.deathTime - 40) / this.DEATH_TIME_MAX * 20;
+        this.gameObject.position.x = this.restingPos + sinkPos;
+      }
+
+      // hide
+      if (this.deathTime > this.DEATH_TIME_MAX) this.hide();
     }
   }
 }

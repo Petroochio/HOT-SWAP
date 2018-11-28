@@ -17,9 +17,18 @@ let isGameOver = true;
 // Use this to give players grace period at start
 let canSpawn = true;
 
+let screen;
+
 // Screen shake for juice
 let isShaking = false;
-let shakeTimer = 0;
+let shakeTime = 0;
+const shakeIntensity = 3;
+let shakeXScale = 0;
+let shakeYScale = 0;
+const SHAKE_TIME_MAX = 100;
+
+let hitPauseTime = 0;
+const HIT_PAUSE_MAX = 30;
 
 const WORLD_SIZE = 300;
 
@@ -93,6 +102,13 @@ function spawnEnemy() {
   }
 }
 
+function startShake() {
+  isShaking = true;
+  shakeTime = 0;
+  shakeXScale = Math.random() > 0.5 ? 1 : -1;
+  shakeYScale = Math.random() > 0.5 ? 1 : -1;
+}
+
 function checkCollisions() {
   cannonballPool.forEach((c) => {
     if (c.isActive && !c.isExploding) {
@@ -108,6 +124,7 @@ function checkCollisions() {
         if (player.getHit(c.getPosition())) {
           c.explode();
           player.addFlame(1000);
+          startShake();
         }
       }
       // check player hit here
@@ -131,6 +148,19 @@ function update(currentTime) {
   // Enemy spawn logic
   enemySpawnTimer += dt;
   if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
+
+  // screen shake
+  if (isShaking) {
+    shakeTime += dt;
+    screen.style.left = (Math.cos(shakeTime) * shakeIntensity * shakeXScale) + 'px';
+    screen.style.top = (Math.sin(shakeTime) * shakeIntensity * shakeYScale) + 'px';
+
+    if (shakeTime > SHAKE_TIME_MAX) {
+      isShaking = false;
+      screen.style.left = '0px';
+      screen.style.top = '0px';
+    }
+  }
 
   // Rendering is so much simpler with THREE than Canvas
   renderer.render(scene, camera);
@@ -156,7 +186,8 @@ function playListener() {
 
 export function init(input$) {
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  screen = document.querySelector('#screen');
+  screen.appendChild(renderer.domElement);
   resize();
 
   window.onkeyup = (e) => {

@@ -47,7 +47,7 @@ const enemySpawnThreshold = 5200;
 // Arrow to keep scope, pass to enemy so we can share one pool
 // maybe create a separate pool for enemy and player :|
 const fireEnemyCannon = (enemyRot, enemyHeading) => {
-  const cannonball = cannonballPool.find(b => !b.isActive);
+  const cannonball = cannonballPool.find(b => !b.isActive && !b.isExploding);
   if (cannonball) {
     cannonball.enemyFire(enemyRot, 0.09, enemyHeading);
   }
@@ -59,7 +59,7 @@ const enemyPool = Array.from(
 );
 
 const firePlayerCannon = (side, rotation, position) => {
-  const cannonball = cannonballPool.find(b => !b.isActive);
+  const cannonball = cannonballPool.find(b => !b.isActive && !b.isExploding);
   if (cannonball) cannonball.playerFire(side, rotation, position, 0.03);
 };
 const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon);
@@ -95,7 +95,7 @@ function spawnEnemy() {
 
 function checkCollisions() {
   cannonballPool.forEach((c) => {
-    if (c.isActive) {
+    if (c.isActive && !c.isExploding) {
       // Check if enemy is hit
       if (c.ownerType === GAME_TYPES.PLAYER) {
         enemyPool.forEach((e) => {

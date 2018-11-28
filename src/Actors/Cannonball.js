@@ -1,6 +1,8 @@
 import * as THREE from 'three';
+
 import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 import { getModel } from '../AssetManager';
+import Explosion from './Explosion';
 
 class Cannonball {
   constructor(scene, worldSize) {
@@ -18,6 +20,7 @@ class Cannonball {
     this.angularV = 0;
 
     this.isActive = false;
+    this.isExploding = false;
     this.ownerType = ''; // set when fired
     this.accelCounter = 1000;
     this.playerAxis = new THREE.Vector3(0, 0, 0);
@@ -73,6 +76,8 @@ class Cannonball {
       }
     );
     // this.smoke.visible = false;
+
+    this.explosion = new Explosion(this.gameObject, 500, this.hide.bind(this));
 
     // this is the same thing as in all other actors
     this.moveSphere = new THREE.Object3D();
@@ -173,12 +178,20 @@ class Cannonball {
     this.enemyMesh.visible = false;
     this.smoke.visible = false;
     this.flightTime = 0;
+    this.isExploding = false;
   }
 
   // Triggers exploding animation
   explode() {
     // trigger explosion animation instead
-    this.hide();
+    this.explosion.start();
+    this.isExploding = true;
+
+    this.playerMesh.visible = false;
+    this.enemyMesh.visible = false;
+    this.smoke.visible = false;
+    this.isActive = false;
+    this.flightTime = 0;
   }
 
   // Triggers splashing animation
@@ -188,6 +201,7 @@ class Cannonball {
   }
 
   update(dt) {
+    this.explosion.update(dt);
     if (this.isActive) {
       this.updateSmoke(dt);
 

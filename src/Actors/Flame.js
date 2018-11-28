@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 class Flame {
-  constructor(parent, position, maxTime) {
+  constructor(parent, position, maxTime, maxFireCallback) {
     this.gameObject = new THREE.Object3D();
     this.gameObject.position.copy(position);
     parent.add(this.gameObject);
@@ -103,6 +103,10 @@ class Flame {
     this.time += dt;
     const s = this.time > this.maxTime ? (this.maxTime + 600) * this.growthRate : (this.time + 600) * this.growthRate;
     this.gameObject.scale.set(s, s, s);
+
+    // if (this.time > this.maxTime) {
+    //   this.maxFireCallback();
+    // }
   }
 }
 

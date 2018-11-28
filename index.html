@@ -2,100 +2,50 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Game</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        font-family: "San Fransisco", sans-serif;
-      }
-      body {
-        overflow: hidden;
-        background: white;
-        
-      }
-      canvas {
-        /* background: rgb(25, 0, 0); */
-      }
-
-      h1, h2 {
-        position: absolute;
-        text-align: center;
-        width: 100%;
-        color: white;
-
-      }
-
-      h1 {
-        top: 40%;
-        font-size: 50px;
-      }
-
-      h2 {
-        top: 58%;
-        font-size: 30px;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      #title {
-        color: rgb(50, 0, 0);
-        /* -webkit-text-stroke-width: 2px;
-        -webkit-text-stroke-color: white; */
-        text-shadow: 3px 3px white;
-
-        top: 30%;
-        font-size: 120px;
-      }
-
-      #play {
-        top: 65%;
-        font-weight: 100;
-        color: white;
-        font-size: 20px;
-        /* -webkit-text-stroke-width: 1px;
-        -webkit-text-stroke-color: white; */
-        /* text-shadow: 1px 2px white; */
-      }
-
-      #score {
-        font-size: 100px;
-        top: 39%;
-      }
-
-      #game-over {
-        top: 30%;
-        font-size: 35px;
-        color: rgb(50, 0, 0);
-        /* -webkit-text-stroke-width: 2px;
-        -webkit-text-stroke-color: white; */
-        text-shadow: 2px 3px white;
-      }
-
-      #screen {
-        position: absolute;
-        top: 0;
-        left: 0;
-
-        background-image: linear-gradient(
-          0deg,
-          rgba(242, 208, 123, 0.7),
-          rgba(242, 208, 123, 0.7),
-          rgba(80, 0, 25, 0.8)
-        );
-      }
-    </style>
+    <title>AHOD</title>
+    <link rel="stylesheet" type="text/css" href="./styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Arvo:400,400i,700,700i|Eczar:400,500,600,700,800" rel="stylesheet">
   </head>
 
   <body>
-    <div id="ui" class="hidden">
-      <h1 id="title">HOT SWAP</h1>
-      <h1 id="game-over" class="hidden">SCORE</h1>
-      <h2 id="score"></h2>
+    <div id="start-screen" class="full-page active">
+      <div id="title" class="full-width">
+        <h1>hot swap</h1>
+        <h2>all hands on deck</h2>
+      </div>
 
-      <h2 id="play">press SPACE to play</h2>
+      <div id="instruction"  class="full-width">
+        <div id="to-begin">to begin</div>
+        <div class="instruction-text active" id="instruction-1">lower the sails</div>
+        <div class="instruction-text" id="instruction-2">spin the wheel</div>
+        <div class="instruction-text" id="instruction-3">load the cannons</div>
+        <div class="instruction-text" id="instruction-4">test fire</div>
+      </div>
+    </div>
+
+    <div id="game-over" class="full-page">
+      <div id="game-over-headline"  class="full-width">
+        <h2>☠ game over ☠</h2>
+      </div>
+      <div id="all-stats">
+        <div id="sunk" class="stat">
+          <p class="stat-heading">enemies sunk</p>
+          <p class="stat">25</p>
+        </div>
+        <div id="cannon" class="stat">
+          <p class="stat-heading">cannonballs fired</p>
+          <p class="stat">103</p>
+        </div>
+        <div id="time" class="stat">
+          <p class="stat-heading">total time</p>
+          <p class="stat">10:15</p>
+        </div>
+        <div id="fire" class="stat">
+          <p class="stat-heading">ship on fire duration</p>
+          <p class="stat">2:08</p>
+        </div>
+        <div id="fire-proportion" class="stat"><div></div></div>
+      </div>
     </div>
 
     <div id="screen"></div>

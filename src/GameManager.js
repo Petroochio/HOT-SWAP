@@ -9,14 +9,21 @@ import { GAME_TYPES, SHIP_DIRECTIONS } from './Constants';
 import {
   getHatch, getWick, getRudderKnob, getSailKnob, getAllInputSwap, getFlame
 } from './InputParser';
-import { ENGINE_METHOD_PKEY_ASN1_METHS } from 'constants';
+
+import { cycleInstructions, hideStartScreen, runGameOverSequence } from './UI';
 
 let prevTime = 0;
 let totalTime = 0;
+let shipsSunk = 0;
 let score = 0;
-let isGameOver = true;
+let isGameOver = false;
 // Use this to give players grace period at start
 let canSpawn = true;
+
+// Start sequence stuff
+let canRun = false;
+let startSeqCount = 0;
+const startSequence = ['SAIL', 'RUDDER', 'HATCH', 'WICK'];
 
 let screen;
 
@@ -72,20 +79,27 @@ const firePlayerCannon = (side, rotation, position) => {
   const cannonball = cannonballPool.find(b => !b.isActive && !b.isExploding);
   if (cannonball) cannonball.playerFire(side, rotation, position, 0.03);
 };
-const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon);
+
+function triggerGameOver(cannonsFired, fireTime) {
+  isGameOver = true;
+  canRun = false;
+  runGameOverSequence(shipsSunk, cannonsFired, totalTime, fireTime);
+}
+
+const player = new Player(scene, camera, WORLD_SIZE, firePlayerCannon, triggerGameOver);
 
 // init renderer
 const renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setClearColor(0x666666, 0);
 renderer.setPixelRatio(window.devicePixelRatio);
 
+// do bloom effect here, they should make npm packages for this
+
 // Make world a class that just holds the globe and maybe some clouds, land?
 // should also include lights, except for player point light
 // const worldTex = new THREE.TextureLoader().load('./Assets/world.png'); //0x5599AA
 const worldMat = new THREE.MeshLambertMaterial({ color: 0x5599AA, flatShading: true });
-// worldTex.wrapS = THREE.RepeatWrapping;
-// worldTex.wrapT = THREE.RepeatWrapping;
-// worldTex.repeat.set(4, 4);
+
 let world;
 getModel('./Assets/world.stl')
   .then((geo) => {
@@ -119,6 +133,7 @@ function checkCollisions() {
           if (e.isActive && e.calcHit(c.getPosition(), c.hitRadius)) {
             e.die();
             c.explode();
+            shipsSunk += 1;
           }
         });
       } else if (c.ownerType === GAME_TYPES.ENEMY) {
@@ -144,6 +159,7 @@ function checkCollisions() {
           e1.die();
           player.addFlame(1000);
           startShake();
+          shipsSunk += 1;
         }
       }
     });
@@ -154,28 +170,34 @@ function update(currentTime) {
   if (prevTime === 0) prevTime = currentTime;
   const dt = currentTime - prevTime;
   prevTime = currentTime;
-  totalTime += dt;
 
-  player.update(dt);
-  cannonballPool.forEach(c => c.update(dt));
-  enemyPool.forEach(e => e.update(dt, player.getPosition()));
+  // update all this on start screen
+  if (!isGameOver) {
+    player.update(dt);
+    cannonballPool.forEach(c => c.update(dt));
+  }
 
-  checkCollisions();
+  if (canRun) {
+    totalTime += dt;
+    enemyPool.forEach(e => e.update(dt, player.getPosition()));
 
-  // Enemy spawn logic
-  enemySpawnTimer += dt;
-  if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
+    checkCollisions();
 
-  // screen shake
-  if (isShaking) {
-    shakeTime += dt;
-    screen.style.left = (Math.cos(shakeTime) * shakeIntensity * shakeXScale) + 'px';
-    screen.style.top = (Math.sin(shakeTime) * shakeIntensity * shakeYScale) + 'px';
+    // Enemy spawn logic
+    enemySpawnTimer += dt;
+    if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
 
-    if (shakeTime > SHAKE_TIME_MAX) {
-      isShaking = false;
-      screen.style.left = '0px';
-      screen.style.top = '0px';
+    // screen shake
+    if (isShaking) {
+      shakeTime += dt;
+      screen.style.left = (Math.cos(shakeTime) * shakeIntensity * shakeXScale) + 'px';
+      screen.style.top = (Math.sin(shakeTime) * shakeIntensity * shakeYScale) + 'px';
+
+      if (shakeTime > SHAKE_TIME_MAX) {
+        isShaking = false;
+        screen.style.left = '0px';
+        screen.style.top = '0px';
+      }
     }
   }
 
@@ -345,7 +367,20 @@ export function init(input$) {
       type,
     ])
     .subscribe({
-      next: ([side, type]) => player.triggerBubble(side, type),
+      next: ([side, type]) => {
+        player.triggerBubble(side, type);
+        if (!isGameOver && !canRun) {
+          if (type === startSequence[startSeqCount]) {
+            startSeqCount += 1;
+            if (startSeqCount < startSequence.length) cycleInstructions(startSeqCount);
+          }
+
+          if (startSeqCount === startSequence.length) {
+            hideStartScreen();
+            canRun = true;
+          }
+        }
+      },
       error: console.log,
       complete: console.log,
     });

@@ -12,11 +12,12 @@ import SpeechBubble, { SPRITES } from './SpeechBubble';
 
 
 class Player {
-  constructor(scene, camera, worldSize, fireCannon) {
+  constructor(scene, camera, worldSize, fireCannon, gameOverCallback) {
     this.type = GAME_TYPES.PLAYER;
     // move camera to a class that looks at the player maybe
     this.scene = scene;
-    this.velocityMin = 0.000007;
+    this.gameOverCallback = gameOverCallback;
+    this.velocityMin = 0;
     this.velocityMax = 0.00015; // scaled to world size bc rotation
     this.velocityTarget = this.velocityMin;
     this.velocity = this.velocityMin;
@@ -179,6 +180,7 @@ class Player {
     this.fireCannon = fireCannon; // passed in to use cannon pool
     // names for these need to match the constants
     this.ammo = { PORT: 0, STARBOARD: 0 };
+    this.cannonsFired = 0;
 
     // [back, mid, front]
     this.CANNON_POS = [0, 0.025, 0.05];
@@ -187,6 +189,7 @@ class Player {
     // Health stuff, AKA other fire
     this.onFire = false;
     this.fireTime = 0;
+    this.fireTimeTotal = 0;
     this.fireMax = 20000;
     this.flames = [
       new Flame(this.gameObject, new THREE.Vector3(0, -5, 7), this.fireMax),
@@ -319,7 +322,6 @@ class Player {
 
     // sloppy logic for choosing which bubble
     if (!bubble0.active) {
-      console.log(sprite, SPRITES[side][sprite]);
       bubble0.setSprite(SPRITES[side][sprite]);
     } else if (!bubble1.active) {
       bubble1.setSprite(SPRITES[side][sprite]);
@@ -336,6 +338,7 @@ class Player {
     if (ammo > 0) {
       // Filthy gosh darn for loop
       for (let i = 0; i < ammo; i += 1) {
+        this.cannonsFired += 1;
         this.fireCannon(
           side,
           this.moveSphere.rotation,
@@ -406,6 +409,7 @@ class Player {
 
   updateFlames(dt) {
     if (this.onFire) {
+      this.fireTimeTotal += dt;
       this.fireTime += dt;
       this.flames.forEach(f => f.update(dt));
     }
@@ -443,6 +447,10 @@ class Player {
     this.moveSphere.rotateOnAxis(this.forwardAxis, dt * this.velocity);
     // Set this once a frame so that enemies can use it
     this.updateWorldPosition();
+
+    if (this.flames[0].time > this.flames[0].maxTime) {
+      this.gameOverCallback(this.cannonsFired, this.fireTimeTotal);
+    }
   }
 }
 

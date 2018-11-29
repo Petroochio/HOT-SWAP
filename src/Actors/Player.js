@@ -195,7 +195,7 @@ class Player {
     this.hitboxes.forEach((h, i) => {
       h.position.copy(this.hitPositions[i]);
       // this shows hitboxes
-      h.visible = false;
+      // h.visible = false;
       this.gameObject.add(h);
     });
 
@@ -279,10 +279,28 @@ class Player {
       // get this hitbox world position
       const worldP = new THREE.Vector3();
       b.getWorldPosition(worldP);
-
+      // hitbox rad + sphere rad = 10
       if (worldP.distanceTo(ballPos) < 10) {
         isHit = true;
       }
+    });
+
+    return isHit;
+  }
+
+  getEnemyHit(enemy) {
+    let isHit = false;
+    const worldP = new THREE.Vector3();
+    const enemyWorldP = new THREE.Vector3();
+
+    this.hitboxes.forEach((b) => {
+      // get this hitbox world position
+      b.getWorldPosition(worldP);
+
+      enemy.hitboxes.forEach((ehb) => {
+        ehb.getWorldPosition(enemyWorldP);
+        if (worldP.distanceTo(enemyWorldP) < 13) isHit = true;
+      });
     });
 
     return isHit;

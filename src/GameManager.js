@@ -132,14 +132,14 @@ function checkCollisions() {
       // Check if enemy is hit
       if (c.ownerType === GAME_TYPES.PLAYER) {
         enemyPool.forEach((e) => {
-          if (e.isActive && e.calcHit(c.getPosition(), c.hitRadius)) {
+          if (e.isActive && e.getHit(c.getPosition())) {
             e.die();
             c.explode();
             shipsSunk += 1;
           }
         });
       } else if (c.ownerType === GAME_TYPES.ENEMY) {
-        if (player.getHit(c.getPosition(), c.hitRadius)) {
+        if (player.getHit(c.getPosition())) {
           c.explode();
           player.addFlame(1000);
           startShake();
@@ -151,14 +151,14 @@ function checkCollisions() {
     enemyPool.forEach((e1) => {
       if (e1.isActive) {
         enemyPool.forEach((e2) => {
-          if (e2.isActive && e2.id !== e1.id && e1.calcHit(e2.getPosition(), e2.hitRadius)) {
+          if (e2.isActive && e2.id !== e1.id && e1.getEnemyHit(e2)) {
             e1.die();
             e2.die();
             playSound('EXPLODE');
           }
         });
 
-        if (player.getHit(e1.getPosition(), e1.hitRadius)) {
+        if (player.getEnemyHit(e1)) {
           e1.die();
           playSound('EXPLODE');
           player.addFlame(1000);

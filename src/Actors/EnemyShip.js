@@ -78,13 +78,32 @@ class EnemyShip {
       });
 
     // Used to calculate hitbox
-    this.hitRadius = 12;
-    this.hitTarget = new THREE.Object3D();
+    // this.hitRadius = 12;
+    // this.hitTargets = new THREE.Object3D();
     // debug stuff so you can see hitbox
     // const debugMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, wireframe: true });
     // this.hitTarget = new THREE.Mesh(new THREE.SphereGeometry(12, 10, 10), debugMat);
-    this.hitTarget.position.y = 13;
-    this.gameObject.add(this.hitTarget);
+    // this.hitTarget.position.y = 13;
+    // this.gameObject.add(this.hitTarget);
+
+    const hitgeo = new THREE.SphereGeometry(6, 10, 10);
+    this.hitboxes = [
+      new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+      new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
+    ];
+
+    this.hitPositions = [
+      new THREE.Vector3(0, 21, 3),
+      new THREE.Vector3(0, 9, 3),
+    ];
+
+    // just replace this array with positions
+    this.hitboxes.forEach((h, i) => {
+      h.position.copy(this.hitPositions[i]);
+      // this shows hitboxes
+      // h.visible = false;
+      this.gameObject.add(h);
+    });
 
     // this is the same thing as in all other actors
     this.moveSphere = new THREE.Object3D();
@@ -96,7 +115,7 @@ class EnemyShip {
   }
 
   updateWorldPos() {
-    this.hitTarget.getWorldPosition(this.hitPos);
+    // this.hitTarget.getWorldPosition(this.hitPos);
   }
 
   getPosition() {
@@ -105,6 +124,41 @@ class EnemyShip {
 
   calcHit(position, d) {
     return this.hitPos.distanceTo(position) < d + this.hitRadius;
+  }
+
+  getHit(ballPos) {
+    let isHit = false;
+
+    this.hitboxes.forEach((b) => {
+      // get this hitbox world position
+      const worldP = new THREE.Vector3();
+      b.getWorldPosition(worldP);
+
+      // hitbox rad + sphere rad = 9
+      if (worldP.distanceTo(ballPos) < 9) {
+        isHit = true;
+      }
+    });
+
+    return isHit;
+  }
+
+  getEnemyHit(enemy) {
+    let isHit = false;
+    const worldP = new THREE.Vector3();
+    const enemyWorldP = new THREE.Vector3();
+
+    this.hitboxes.forEach((b) => {
+      // get this hitbox world position
+      b.getWorldPosition(worldP);
+
+      enemy.hitboxes.forEach((ehb) => {
+        ehb.getWorldPosition(enemyWorldP);
+        if (worldP.distanceTo(enemyWorldP) < 12) isHit = true;
+      });
+    });
+
+    return isHit;
   }
 
   // Spawn within an arc of the player at a set distance

@@ -9,7 +9,7 @@ import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
 import Flame from './Flame';
 import SpeechBubble, { SPRITES } from './SpeechBubble';
-
+import { playSound } from '../SoundPlayer';
 
 class Player {
   constructor(scene, camera, worldSize, fireCannon, gameOverCallback) {
@@ -52,12 +52,19 @@ class Player {
       });
     const specular = new THREE.Color(0xffffff);
     // Sails
-    const sailMat = new THREE.MeshLambertMaterial({
+    const sailMat = new THREE.MeshBasicMaterial({
       color: 0xFAFAFA,
       side: THREE.DoubleSide,
       // specular,
       shininess: 100,
       reflectivity: 0,
+    });
+
+    const sailWireMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      side: THREE.DoubleSide,
+      wireframe: true,
+      wireframeLinewidth: 5,
     });
 
     // Front Sail
@@ -77,7 +84,12 @@ class Player {
     this.frontSail = new THREE.Mesh(frontSailGeo, sailMat);
     this.frontSail.position.x = 2.07; // hard coded from model file
     this.frontSail.position.y = 18.80;
+    this.frontSailWire = new THREE.Mesh(frontSailGeo, sailWireMat);
+    this.frontSailWire.position.x = 2.07; // hard coded from model file
+    this.frontSailWire.position.y = 18.75;
+
     this.ship.add(this.frontSail);
+    this.ship.add(this.frontSailWire);
 
     // Back Sail
     const backSailGeo = new THREE.Geometry();
@@ -98,9 +110,20 @@ class Player {
     this.backSail.position.y = 7.29;
     this.ship.add(this.backSail);
 
+    this.backSailWire = new THREE.Mesh(backSailGeo, sailWireMat);
+    this.backSailWire.position.x = 2.16; // hard coded from model file
+    this.backSailWire.position.y = 7.24;
+    this.ship.add(this.backSailWire);
+
+    const rudderMat = new THREE.MeshLambertMaterial({
+      color: 0xFAFAFA,
+      // specular,
+      shininess: 100,
+      reflectivity: 0,
+    });
     getModel('./Assets/pirate/pirate_rudder.stl')
       .then((geo) => {
-        this.rudder = new THREE.Mesh(geo, sailMat);
+        this.rudder = new THREE.Mesh(geo, rudderMat);
         this.rudder.position.y = -8.18; // hard coded from model file
         this.ship.add(this.rudder);
       });
@@ -336,13 +359,15 @@ class Player {
     const ammo = this.ammo[side];
     // don't light without ammo
     if (ammo > 0) {
+      playSound('CANNON');
       // Filthy gosh darn for loop
       for (let i = 0; i < ammo; i += 1) {
         this.cannonsFired += 1;
         this.fireCannon(
           side,
           this.moveSphere.rotation,
-          this.CANNON_POS[i]
+          this.CANNON_POS[i],
+          0 // cannon fire offset
         );
       }
 
@@ -351,6 +376,7 @@ class Player {
       this.addRoll(this.FIRE_ROLL_AMOUNT[side]);
     } else {
       this.triggerBubble(side, 'NO_AMMO');
+      playSound('ERROR');
     }
 
     this.updateCannonOutlines();

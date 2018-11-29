@@ -45,9 +45,9 @@ export function hideStartScreen() {
 // }
 
 function revealStat(i) {
-  const element = document.getElementsByClassName('stat')[i];
-  console.log(element);
+  const element = document.getElementsByClassName('stat-box')[i];
   element.classList.add('active');
+  console.log(element);
 }
 
 export function runGameOverSequence(shipSunk, cannonsFired, timeTotal, timeFire) {
@@ -70,7 +70,7 @@ export function runGameOverSequence(shipSunk, cannonsFired, timeTotal, timeFire)
   const ratio = timeFire / timeTotal * 100;
   document.getElementById('fire-proportion').innerHTML = '<div id=\'ship-ok\' style=\'width:' + (100 - ratio) + '%;\'></div><div id=\'ship-fire\' style=\'width:' + ratio + '%;\'></div>';
 
-  const elements = document.getElementsByClassName('stat');
+  const elements = document.getElementsByClassName('stat-box');
   // why did you use just five, and how did it work?
   for (let i = 0; i < elements.length; i += 1) {
     const item = elements[i];

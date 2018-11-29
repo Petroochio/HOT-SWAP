@@ -7,11 +7,11 @@ import { INPUT_TYPES } from './Constants';
 
 const notNil = pipe(isNil, not);
 
-const isSail = data => (data[1] > 320 && data[1] < 330);
-const isRudder = data => (data[1] > 177 && data[1] < 187);
-const isHatch = data => (data[1] > 508 && data[1] < 518);
-const isWick = data => (data[1] > 399 && data[1] < 409);
-const isFlame = data => (data[1] > 700 && data[1] < 704);
+const isSail = data => (data[1] > 310 && data[1] < 340);
+const isRudder = data => (data[1] > 167 && data[1] < 197);
+const isHatch = data => (data[1] > 498 && data[1] < 528);
+const isWick = data => (data[1] > 389 && data[1] < 419);
+const isFlame = data => (data[1] > 690 && data[1] < 724);
 
 // all of the ids are hardcoded, we should create a function check and look at
 // a file elseware

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+import { createLoopedSound } from '../SoundPlayer';
+
 class Flame {
   constructor(parent, position, maxTime, maxFireCallback) {
     this.gameObject = new THREE.Object3D();
@@ -57,6 +59,15 @@ class Flame {
   burn(startTime) {
     this.time = startTime;
     this.gameObject.visible = true;
+
+    if (!this.sound) {
+      console.log('OOOO');
+      this.sound = createLoopedSound('FLAME');
+      this.sound.sound.start(0);
+      this.sound.GAIN.value = 0.2;
+    } else {
+      // this.sound.gain.value = 0.2;
+    }
   }
 
   updateParticles() {
@@ -103,6 +114,14 @@ class Flame {
     this.time += dt;
     const s = this.time > this.maxTime ? (this.maxTime + 600) * this.growthRate : (this.time + 600) * this.growthRate;
     this.gameObject.scale.set(s, s, s);
+
+    if (this.sound && this.time < this.maxTime) {
+      this.sound.GAIN.value = 0.2 + this.time / this.maxTime * 0.5;
+      console.log(this.sound.GAIN.value);
+    } else if (this.sound) {
+      this.sound.GAIN.value = 0;
+      console.log(this.sound);
+    }
 
     // if (this.time > this.maxTime) {
     //   this.maxFireCallback();

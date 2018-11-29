@@ -4,6 +4,8 @@ import { GAME_TYPES } from '../Constants';
 import { getModel } from '../AssetManager';
 import { isInRange } from '../utils';
 
+import { playSound } from '../SoundPlayer';
+
 class EnemyShip {
   constructor(scene, worldSize, fireCannon) {
     this.type = GAME_TYPES.ENEMY;
@@ -219,6 +221,7 @@ class EnemyShip {
       this.shootTimer += dt;
       if (this.shootTimer >= this.shootMax) {
         this.shootTimer = 0;
+        playSound('CANNON');
         this.fireCannon(this.moveSphere.rotation, this.headingRotation * 0.0003);
         this.addPitch(0.006);
       }

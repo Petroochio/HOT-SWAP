@@ -14,7 +14,7 @@ class Explosion {
     this.endCallback = endCallback;
 
     // Create particles here
-    this.particleGeo = new THREE.SphereGeometry(2, 4, 2);
+    this.particleGeo = new THREE.SphereGeometry(3, 4, 2);
     this.particles = Array.from(
       { length: 15 },
       () => ({
@@ -25,13 +25,12 @@ class Explosion {
         forward: new THREE.Vector3(
           Math.random() * 0.02 - 0.01,
           Math.random() * 0.02 - 0.01,
-          -0.05// Math.random() * 0.02 - 0.01
+          -0.05
         ),
       })
     );
 
     this.particles.forEach((p) => {
-      // p.mesh.scale.set(0.3, 0.3, 1);
       p.mesh.scale.set(0.3, 0.3, 0.8);
       this.gameObject.add(p.mesh);
     });

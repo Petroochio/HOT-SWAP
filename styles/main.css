@@ -122,7 +122,7 @@ h2 {
   margin-left: 15vw;
 }
 
-.stat {
+.stat-box {
   position: relative;
   float: left;
   width: 50%;
@@ -133,7 +133,7 @@ h2 {
   transition: all 0.5s ease-in;
 }
 
-.stat.active {
+.stat-box.active {
   opacity: 1.0;
 }
 
@@ -164,8 +164,10 @@ p.stat {
 }
 
 #fire-proportion {
+  margin-top: 7vh;
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.2)
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2vh;
 }
 
 #fire-proportion div {
@@ -176,12 +178,14 @@ p.stat {
 }
 
 #ship-fire {
+  border-radius: 0 2vh 2vh 0;
   background:url(
       data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHElEQVQYV2P8H8nwn3E5AyOMZmRAA2ABFFXoKgDr3gtcKfO8pQAAAABJRU5ErkJggg==
   ) repeat;
 }
 
 #ship-ok {
+  border-radius: 2vh 0 0 2vh;
   background:url(
       data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHklEQVQYV2NkQAOMIP7///8bGBkZG0BssAAywBAAALDiBAUCBLA1AAAAAElFTkSuQmCC
   ) repeat;

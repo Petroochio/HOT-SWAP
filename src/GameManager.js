@@ -12,6 +12,8 @@ import {
 
 import { cycleInstructions, hideStartScreen, runGameOverSequence } from './UI';
 
+import { playSound, playSoundLooped } from './SoundPlayer';
+
 let prevTime = 0;
 let totalTime = 0;
 let shipsSunk = 0;
@@ -75,9 +77,9 @@ const enemyPool = Array.from(
   () => new EnemyShip(scene, WORLD_SIZE, fireEnemyCannon)
 );
 
-const firePlayerCannon = (side, rotation, position) => {
+const firePlayerCannon = (side, rotation, position, cannonRotOffset) => {
   const cannonball = cannonballPool.find(b => !b.isActive && !b.isExploding);
-  if (cannonball) cannonball.playerFire(side, rotation, position, 0.03);
+  if (cannonball) cannonball.playerFire(side, rotation, position, 0.03, cannonRotOffset);
 };
 
 function triggerGameOver(cannonsFired, fireTime) {
@@ -152,11 +154,13 @@ function checkCollisions() {
           if (e2.isActive && e2.id !== e1.id && e1.calcHit(e2.getPosition(), e2.hitRadius)) {
             e1.die();
             e2.die();
+            playSound('EXPLODE');
           }
         });
 
         if (player.getHit(e1.getPosition(), e1.hitRadius)) {
           e1.die();
+          playSound('EXPLODE');
           player.addFlame(1000);
           startShake();
           shipsSunk += 1;
@@ -170,6 +174,31 @@ function update(currentTime) {
   if (prevTime === 0) prevTime = currentTime;
   const dt = currentTime - prevTime;
   prevTime = currentTime;
+
+  // start sequence stuff
+  if (!isGameOver && !canRun) {
+    switch (startSeqCount) {
+      case 0:
+        if (player.velocityTarget > 0.000001) {
+          startSeqCount += 1;
+        }
+
+        cycleInstructions(startSeqCount);
+        break;
+      case 1:
+        if (player.turnRate > 0.00001 || player.turnRate < -0.00001) {
+          startSeqCount += 1;
+        }
+
+        cycleInstructions(startSeqCount);
+        break;
+      case 4:
+        hideStartScreen();
+        canRun = true;
+        break;
+      default: break;
+    }
+  }
 
   // update all this on start screen
   if (!isGameOver) {
@@ -210,7 +239,6 @@ function reset() {
   // do game state reset stuff here
   prevTime = 0;
   totalTime = 0;
-
   requestAnimationFrame(update.bind(this));
 }
 
@@ -252,6 +280,10 @@ export function init(input$) {
     // Load port
     if (e.keyCode === 38) {
       player.setSailSpeed(0.00001);
+      if (!canRun && !isGameOver) {
+        hideStartScreen();
+        canRun = true;
+      }
     }
 
     // Load starboard
@@ -328,7 +360,13 @@ export function init(input$) {
     .filter(prop('shouldLoad'))
     .map(({ id }) => (id === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD))
     .subscribe({
-      next: direction => player.loadCannon(direction),
+      next: (direction) => {
+        if (startSeqCount === 2) {
+          startSeqCount += 1;
+          cycleInstructions(startSeqCount);
+        }
+        player.loadCannon(direction);
+      },
       error: console.log,
       complete: console.log,
     });
@@ -342,7 +380,13 @@ export function init(input$) {
     .filter(prop('shouldLight'))
     .map(({ id }) => (id === 1 ? SHIP_DIRECTIONS.PORT : SHIP_DIRECTIONS.STARBOARD))
     .subscribe({
-      next: direction => player.lightFuse(direction),
+      next: (direction) => {
+        if (startSeqCount === 3) {
+          startSeqCount += 1;
+        }
+
+        player.lightFuse(direction);
+      },
       error: console.log,
       complete: console.log,
     });
@@ -369,17 +413,6 @@ export function init(input$) {
     .subscribe({
       next: ([side, type]) => {
         player.triggerBubble(side, type);
-        if (!isGameOver && !canRun) {
-          if (type === startSequence[startSeqCount]) {
-            startSeqCount += 1;
-            if (startSeqCount < startSequence.length) cycleInstructions(startSeqCount);
-          }
-
-          if (startSeqCount === startSequence.length) {
-            hideStartScreen();
-            canRun = true;
-          }
-        }
       },
       error: console.log,
       complete: console.log,

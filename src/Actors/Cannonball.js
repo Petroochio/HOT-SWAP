@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GAME_TYPES, SHIP_DIRECTIONS } from '../Constants';
 import { getModel } from '../AssetManager';
 import Explosion from './Explosion';
+import { playSound } from '../SoundPlayer';
 
 class Cannonball {
   constructor(scene, worldSize) {
@@ -186,6 +187,8 @@ class Cannonball {
     // trigger explosion animation instead
     this.explosion.start();
     this.isExploding = true;
+
+    playSound('EXPLODE');
 
     this.playerMesh.visible = false;
     this.enemyMesh.visible = false;

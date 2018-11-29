@@ -77,15 +77,6 @@ class EnemyShip {
         this.ship.add(this.cannon);
       });
 
-    // Used to calculate hitbox
-    // this.hitRadius = 12;
-    // this.hitTargets = new THREE.Object3D();
-    // debug stuff so you can see hitbox
-    // const debugMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, wireframe: true });
-    // this.hitTarget = new THREE.Mesh(new THREE.SphereGeometry(12, 10, 10), debugMat);
-    // this.hitTarget.position.y = 13;
-    // this.gameObject.add(this.hitTarget);
-
     const hitgeo = new THREE.SphereGeometry(6, 10, 10);
     this.hitboxes = [
       new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
@@ -162,7 +153,7 @@ class EnemyShip {
   }
 
   // Spawn within an arc of the player at a set distance
-  spawn(playerRot) {
+  spawn(playerRot, spawnSide) {
     this.isActive = true;
     this.floatPos = -20;
     this.pitchSpawnOffset = -Math.PI / 3;
@@ -170,7 +161,7 @@ class EnemyShip {
     // start with player position
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
     // const yawOffset = Math.PI;//(Math.PI / 3.5); //(Math.random() * 1.31 * Math.PI) + (Math.PI / 3.5);
-    const yawOffset = Math.PI + (Math.random() * Math.PI / 2) - Math.PI / 4;
+    const yawOffset = Math.PI + (Math.random() * Math.PI / 4) * spawnSide;
     const startOffset = -Math.PI / 4;
 
     // move away from player based on randomly generated position

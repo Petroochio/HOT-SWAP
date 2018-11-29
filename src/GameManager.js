@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { prop } from 'ramda';
+import { prop, clamp } from 'ramda';
 
 import Player from './Actors/Player';
 import Cannonball from './Actors/Cannonball';
@@ -12,8 +12,9 @@ import {
 
 import { cycleInstructions, hideStartScreen, runGameOverSequence } from './UI';
 
-import { playSound, playSoundLooped } from './SoundPlayer';
+import { playSound, createLoopedSound } from './SoundPlayer';
 
+let soundtrack;
 let prevTime = 0;
 let totalTime = 0;
 let shipsSunk = 0;
@@ -21,6 +22,7 @@ let score = 0;
 let isGameOver = false;
 // Use this to give players grace period at start
 let canSpawn = true;
+let enemySpawnSide = -1;
 
 // Start sequence stuff
 let canRun = false;
@@ -61,7 +63,7 @@ const cannonballPool = Array.from(
 );
 
 let enemySpawnTimer = 0; // start negative to give more time to adapt
-const enemySpawnThreshold = 5200;
+let enemySpawnThreshold = 10000;
 
 // Arrow to keep scope, pass to enemy so we can share one pool
 // maybe create a separate pool for enemy and player :|
@@ -115,7 +117,10 @@ function spawnEnemy() {
     enemySpawnTimer = 0;
     const enemy = enemyPool.find(e => !e.isActive && !e.isDying);
     // Hard cap is in the enemy pool rn ~50
-    if (enemy) enemy.spawn(player.moveSphere.rotation);
+    if (enemy) {
+      enemySpawnSide *= -1;
+      enemy.spawn(player.moveSphere.rotation, enemySpawnSide);
+    }
   }
 }
 
@@ -207,6 +212,11 @@ function update(currentTime) {
   }
 
   if (canRun) {
+    if (!soundtrack) {
+      soundtrack = createLoopedSound('SOUNDTRACK');
+      soundtrack.sound.start(0);
+      soundtrack.GAIN.gain.setValueAtTime(0.4, soundtrack.ctx.currentTime);
+    }
     totalTime += dt;
     enemyPool.forEach(e => e.update(dt, player.getPosition()));
 
@@ -214,6 +224,7 @@ function update(currentTime) {
 
     // Enemy spawn logic
     enemySpawnTimer += dt;
+    enemySpawnThreshold = clamp(3000, 100000, 10000 * (180000 - totalTime) / 180000);
     if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
 
     // screen shake

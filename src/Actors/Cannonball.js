@@ -148,7 +148,7 @@ class Cannonball {
   }
 
   // Fires cannonball as if rom player
-  playerFire(side, playerRot, startOffset, cannonOffset) {
+  playerFire(side, playerRot, startOffset, cannonOffset, cannonRotOffset) {
     this.fire(GAME_TYPES.PLAYER);
     this.playerMesh.visible = true;
 
@@ -165,6 +165,8 @@ class Cannonball {
       this.moveSphere.rotateOnAxis(this.yawAxis, -Math.PI / 2);
       this.playerAxis = new THREE.Vector3(0, -1, 0);
     }
+    // offset for cannon spot
+    this.moveSphere.rotateOnAxis(this.yawAxis, cannonRotOffset);
 
     // Move to front of cannon
     this.moveSphere.rotateOnAxis(this.forwardAxis, cannonOffset);

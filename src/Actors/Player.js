@@ -179,9 +179,6 @@ class Player {
       new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
       new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
       new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
-      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
-      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
-      // new THREE.Mesh(hitgeo, new THREE.MeshBasicMaterial({ wireframe: true })),
     ];
 
     this.hitPositions = [
@@ -195,7 +192,7 @@ class Player {
     this.hitboxes.forEach((h, i) => {
       h.position.copy(this.hitPositions[i]);
       // this shows hitboxes
-      // h.visible = false;
+      h.visible = false;
       this.gameObject.add(h);
     });
 
@@ -381,11 +378,15 @@ class Player {
       // Filthy gosh darn for loop
       for (let i = 0; i < ammo; i += 1) {
         this.cannonsFired += 1;
+        let rotOffset = 0;
+        console.log(side);
+        if (i === 0) rotOffset = side === 'PORT' ? 0.05 : -0.05;
+        if (i === 2) rotOffset = side === 'PORT' ? -0.05 : 0.05;
         this.fireCannon(
           side,
           this.moveSphere.rotation,
           this.CANNON_POS[i],
-          0 // cannon fire offset
+          rotOffset
         );
       }
 

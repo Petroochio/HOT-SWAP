@@ -101,7 +101,7 @@ class EnemyShip {
     this.hitboxes.forEach((h, i) => {
       h.position.copy(this.hitPositions[i]);
       // this shows hitboxes
-      // h.visible = false;
+      h.visible = false;
       this.gameObject.add(h);
     });
 
@@ -282,7 +282,7 @@ class EnemyShip {
     } else if (this.isDying) {
       this.deathTime += dt;
       // white flash
-      if (this.deathTime < 40) {
+      if (this.deathTime < 60) {
         this.showFlash();
       } else {
         this.stopFlash();
@@ -291,7 +291,7 @@ class EnemyShip {
         const rollOffset = dt * this.deathRollDir * 0.003;
         this.gameObject.rotateY(rollOffset);
         // float
-        const sinkPos = -(this.deathTime - 40) / this.DEATH_TIME_MAX * 20;
+        const sinkPos = -(this.deathTime - 60) / this.DEATH_TIME_MAX * 20;
         this.gameObject.position.x = this.restingPos + sinkPos;
       }
 

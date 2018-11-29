@@ -288,7 +288,8 @@ class EnemyShip {
         this.stopFlash();
 
         // roll over
-
+        const rollOffset = dt * this.deathRollDir * 0.003;
+        this.gameObject.rotateY(rollOffset);
         // float
         const sinkPos = -(this.deathTime - 40) / this.DEATH_TIME_MAX * 20;
         this.gameObject.position.x = this.restingPos + sinkPos;

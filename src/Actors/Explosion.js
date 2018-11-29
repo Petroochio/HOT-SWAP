@@ -65,9 +65,9 @@ class Explosion {
       p.mesh.scale.y = (1 - s) * 0.3;
       p.mesh.scale.z = (1 - s) * 0.8;
 
-      p.mesh.material.color.r = 1 - s;
-      p.mesh.material.color.g = (1 - s);
-      p.mesh.material.color.b = (1 - s);
+      // p.mesh.material.color.r = 1 - s;
+      // p.mesh.material.color.g = (1 - s);
+      // p.mesh.material.color.b = (1 - s);
       p.mesh.material.opacity = (1 - s) * 0.8;
     });
   }

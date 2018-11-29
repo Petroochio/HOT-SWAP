@@ -54,8 +54,9 @@ class Player {
       });
     const specular = new THREE.Color(0xffffff);
     // Sails
-    const sailMat = new THREE.MeshBasicMaterial({
-      color: 0xFAFAFA,
+    const sailMat = new THREE.MeshLambertMaterial({
+      color: 0xFFFFFF,
+      emissive: 0x999999,
       side: THREE.DoubleSide,
       // specular,
       shininess: 100,
@@ -63,10 +64,11 @@ class Player {
     });
 
     const sailWireMat = new THREE.MeshBasicMaterial({
-      color: 0x000000,
+      color: 0xFFFFFF,
       side: THREE.DoubleSide,
       wireframe: true,
       wireframeLinewidth: 5,
+      opacity: 0,
     });
 
     // Front Sail
@@ -437,7 +439,7 @@ class Player {
     } else {
       this.onFire = true;
       this.fireTime = 0;
-      this.flames.forEach(f => f.burn(3000));
+      this.flames.forEach(f => f.burn(clamp(0, this.fireMax, (this.fireTimeTotal / 4))));
     }
   }
 

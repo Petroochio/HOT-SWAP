@@ -34,9 +34,11 @@ class Player {
     this.rollSpeed = 0;
     this.rollAcc = 0;
 
+    this.bobTime = 0;
+    this.basePosition = worldSize - 4;
     // Set it to be on the edge of the world
     this.gameObject = new THREE.Object3D();
-    this.gameObject.position.x = worldSize - 4;
+    this.gameObject.position.x = this.basePosition;
     this.gameObject.rotateY(Math.PI / 2);
 
     // ship body
@@ -379,7 +381,7 @@ class Player {
       for (let i = 0; i < ammo; i += 1) {
         this.cannonsFired += 1;
         let rotOffset = 0;
-        console.log(side);
+
         if (i === 0) rotOffset = side === 'PORT' ? 0.05 : -0.05;
         if (i === 2) rotOffset = side === 'PORT' ? -0.05 : 0.05;
         this.fireCannon(
@@ -469,11 +471,19 @@ class Player {
     this.speechBubbles.STARBOARD.forEach(s => s.update(dt));
   }
 
+  updateBob(dt) {
+    this.bobTime += dt;
+
+    const bobOffset = Math.sin(this.bobTime / 1500) * 1.5 + 0.5;
+    this.ship.position.z = bobOffset;
+  }
+
   // Central update
   update(dt) {
     this.updateRoll(dt);
     this.updateFlames(dt);
     this.updateBubbles(dt);
+    this.updateBob(dt);
 
     // always moving forward
     // switch to acceleration and velocity with a max speed

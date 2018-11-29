@@ -12,7 +12,7 @@ class EnemyShip {
     this.scene = scene;
     this.worldSize = worldSize;
     this.fireCannon = fireCannon;
-    this.speed = 0.005 / worldSize;
+    this.speed = 0.007 / worldSize;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
 
@@ -160,7 +160,6 @@ class EnemyShip {
 
     // start with player position
     this.moveSphere.rotation.set(playerRot.x, playerRot.y, playerRot.z);
-    // const yawOffset = Math.PI;//(Math.PI / 3.5); //(Math.random() * 1.31 * Math.PI) + (Math.PI / 3.5);
     const yawOffset = Math.PI + (Math.random() * Math.PI / 4) * spawnSide;
     const startOffset = -Math.PI / 4;
 

@@ -224,7 +224,8 @@ function update(currentTime) {
 
     // Enemy spawn logic
     enemySpawnTimer += dt;
-    enemySpawnThreshold = clamp(3000, 100000, 10000 * (180000 - totalTime) / 180000);
+    enemySpawnThreshold = clamp(1500, 10000, 10000 * (90000 - totalTime) / 90000);
+
     if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
 
     // screen shake

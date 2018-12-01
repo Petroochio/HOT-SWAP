@@ -6,11 +6,9 @@ import { find } from 'ramda';
 class SerialProducer {
   constructor() {
     // should we open the port here?
-    this.port = {};
-  }
+    this.port = undefined;
 
-  start(listener) {
-    // Could we do this in the constructor?
+    // Do this in the constructory so it's multicast
     SerialPort.list()
       // find the good port
       // we should maybe mess with the config on our arduinos for this
@@ -19,15 +17,21 @@ class SerialProducer {
       .then(portInfo => new SerialPort(portInfo.comName)
         .pipe(new DelimiterParser({ delimiter: '-' })))
       .then((port) => {
-        // Save this so we can close it?
         this.port = port;
-        port.on('data', d => listener.next(d));
       });
   }
 
+  start(listener) {
+    // I think there is an error in this file in opening too many ports
+    // but maybe not. xstream only starts for the first listender
+    // what a nice library
+    if (this.port) this.port.on('data', d => listener.next(d));
+    else listener.error(new Error('No Port Connected'));
+  }
+
   stop() {
+    // Implement stop
     console.log(this.port);
-    console.log('Implement Stop nerd');
   }
 }
 

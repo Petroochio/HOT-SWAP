@@ -15,6 +15,29 @@ export const KEYS = {
   SPACE: 32,
 };
 
+// to me this is more straightforward than using type of,
+// and it allows for broader categories
+export const GAME_TYPES = {
+  PLAYER: 'PLAYER',
+  ENEMY: 'ENEMY',
+  CANNONBALL: 'CANNONBALL',
+};
+
+export const INPUT_TYPES = {
+  WICK: 'WICK',
+  HATCH: 'HATCH',
+  SAIL: 'SAIL',
+  RUDDER: 'RUDDER',
+  FLAME: 'FLAME',
+};
+
+export const SHIP_DIRECTIONS = {
+  PORT: 'PORT',
+  STARBOARD: 'STARBOARD',
+};
+
 export default {
   KEYS,
+  GAME_TYPES,
+  SHIP_DIRECTIONS,
 };

@@ -39,6 +39,8 @@ let shakeXScale = 0;
 let shakeYScale = 0;
 const SHAKE_TIME_MAX = 100;
 
+let activeEnemies = 0;
+
 let hitPauseTime = 0;
 const HIT_PAUSE_MAX = 30;
 
@@ -53,7 +55,7 @@ const camera = new THREE.OrthographicCamera(
   window.innerWidth / cameraScale,
   window.innerHeight / cameraScale,
   window.innerHeight / (-cameraScale),
-  -100,
+  -150,
   1000
 );
 
@@ -115,6 +117,7 @@ getModel('./Assets/world.stl')
 function spawnEnemy() {
   if (canSpawn) {
     enemySpawnTimer = 0;
+    activeEnemies += 1;
     const enemy = enemyPool.find(e => !e.isActive && !e.isDying);
     // Hard cap is in the enemy pool rn ~50
     if (enemy) {
@@ -139,6 +142,7 @@ function checkCollisions() {
         enemyPool.forEach((e) => {
           if (e.isActive && e.getHit(c.getPosition())) {
             e.die();
+            activeEnemies -= 1;
             c.explode();
             shipsSunk += 1;
           }
@@ -146,7 +150,7 @@ function checkCollisions() {
       } else if (c.ownerType === GAME_TYPES.ENEMY) {
         if (player.getHit(c.getPosition())) {
           c.explode();
-          player.addFlame(1000);
+          player.addFlame(2000);
           startShake();
         }
       }
@@ -159,14 +163,16 @@ function checkCollisions() {
           if (e2.isActive && e2.id !== e1.id && e1.getEnemyHit(e2)) {
             e1.die();
             e2.die();
+            activeEnemies -= 2;
             playSound('EXPLODE');
           }
         });
 
         if (player.getEnemyHit(e1)) {
           e1.die();
+          activeEnemies -= 1;
           playSound('EXPLODE');
-          player.addFlame(1000);
+          player.addFlame(1500);
           startShake();
           shipsSunk += 1;
         }
@@ -215,7 +221,7 @@ function update(currentTime) {
     if (!soundtrack) {
       soundtrack = createLoopedSound('SOUNDTRACK');
       soundtrack.sound.start(0);
-      soundtrack.GAIN.gain.setValueAtTime(0.4, soundtrack.ctx.currentTime);
+      soundtrack.GAIN.gain.setValueAtTime(0.5, soundtrack.ctx.currentTime);
     }
     totalTime += dt;
     enemyPool.forEach(e => e.update(dt, player.getPosition()));
@@ -224,9 +230,9 @@ function update(currentTime) {
 
     // Enemy spawn logic
     enemySpawnTimer += dt;
-    enemySpawnThreshold = clamp(1500, 10000, 10000 * (90000 - totalTime) / 90000);
+    enemySpawnThreshold = clamp(1000, 10000, 10000 * (120000 - totalTime) / 120000);
 
-    if (enemySpawnTimer > enemySpawnThreshold) spawnEnemy();
+    if (enemySpawnTimer > enemySpawnThreshold && activeEnemies < 20) spawnEnemy();
 
     // screen shake
     if (isShaking) {
@@ -279,6 +285,10 @@ export function init(input$) {
       player.lightFuse(SHIP_DIRECTIONS.STARBOARD);
     }
 
+    if (e.keyCode === 73) {
+      player.addFlame(8000);
+    }
+
     // Load port
     if (e.keyCode === 65) {
       player.loadCannon(SHIP_DIRECTIONS.PORT);
@@ -313,8 +323,25 @@ export function init(input$) {
     }
 
     if (e.keyCode === 70) {
-      player.calmFire(1000);
+      player.calmFire(500);
     }
+
+    if (e.key === 'z') {
+      player.triggerBubble(SHIP_DIRECTIONS.PORT, 'SAIL');
+    }
+
+    if (e.key === 'x') {
+      player.triggerBubble(SHIP_DIRECTIONS.PORT, 'RUDDER');
+    }
+
+    if (e.key === 'c') {
+      player.triggerBubble(SHIP_DIRECTIONS.STARBOARD, 'HATCH');
+    }
+
+    if (e.key === 'v') {
+      player.triggerBubble(SHIP_DIRECTIONS.STARBOARD, 'WICK');
+    }
+
   };
 
   // Steering
@@ -411,7 +438,7 @@ export function init(input$) {
     }), { prev: false })
     .filter(data => data.output)
     .subscribe({
-      next: () => player.calmFire(1500),
+      next: () => player.calmFire(600),
       error: console.log,
       complete: console.log,
     });

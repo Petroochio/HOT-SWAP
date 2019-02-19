@@ -14,5 +14,5 @@ const input$ = xs.create(serial)
   .map(map(pipe(split(' '), map(parseInt))));
 
 // Using set timeout here because there is a race condition
-window.onload = () => { setTimeout(() => init(input$), 100); };
+window.onload = () => { setTimeout(() => init(input$), 500); };
 window.onresize = resize;

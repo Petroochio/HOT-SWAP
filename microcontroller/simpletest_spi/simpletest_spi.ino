@@ -60,5 +60,5 @@ void loop() {
   Serial.print("-");
   count++;
   
-  delay(10);
+  delay(20);
 }

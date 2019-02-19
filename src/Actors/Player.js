@@ -25,7 +25,7 @@ class Player {
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
     this.worldPos = new THREE.Vector3(0, 0, 0); // stores world location
-    this.TURN_MAX = 0.0004;
+    this.TURN_MAX = 0.0003;
 
     this.rollOffset = 0;
     this.turnRollOffset = 0;
@@ -435,11 +435,15 @@ class Player {
     if (this.onFire) {
       // add more fire
       this.fireTime += amount;
-      this.flames.forEach(f => f.addFlame(amount));
+      this.fireTimeTotal += amount;
+      if ((this.fireTimeTotal / 2.5) > this.fireTime) {
+        this.fireTime = clamp(0, this.fireMax, this.fireTimeTotal / 2.5);
+      }
+      this.flames.forEach(f => f.setFlame(this.fireTime));
     } else {
       this.onFire = true;
-      this.fireTime = 0;
-      this.flames.forEach(f => f.burn(clamp(0, this.fireMax, (this.fireTimeTotal / 4))));
+      this.fireTime = clamp(0, this.fireMax * 0.8, (this.fireTimeTotal / 3));
+      this.flames.forEach(f => f.burn(this.fireTime));
     }
   }
 

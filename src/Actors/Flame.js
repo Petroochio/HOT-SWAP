@@ -45,8 +45,8 @@ class Flame {
     }
   }
 
-  addFlame(amount) {
-    this.time += amount;
+  setFlame(amount) {
+    this.time = amount;
   }
 
   triggerFlash() {

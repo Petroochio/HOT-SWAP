@@ -12,7 +12,7 @@ class EnemyShip {
     this.scene = scene;
     this.worldSize = worldSize;
     this.fireCannon = fireCannon;
-    this.speed = 0.007 / worldSize;
+    this.speed = 0.009 / worldSize;
     this.forwardAxis = new THREE.Vector3(0, 0, 1);
     this.yawAxis = new THREE.Vector3(1, 0, 0);
 
@@ -105,10 +105,6 @@ class EnemyShip {
     this.id = this.gameObject.id;// for collisions!
   }
 
-  updateWorldPos() {
-    // this.hitTarget.getWorldPosition(this.hitPos);
-  }
-
   getPosition() {
     return this.hitPos;
   }
@@ -169,6 +165,9 @@ class EnemyShip {
 
     // Add top level obj to scene
     this.gameObject.visible = true;
+
+    // fix roll offset from death animation
+    this.gameObject.rotation.y = Math.PI / 2;
     // trigger spawning animation right here
   }
 
@@ -196,6 +195,7 @@ class EnemyShip {
     this.floatPos = -20;
     this.gameObject.visible = false;
     this.stopFlash();
+    this.isDying = false;
   }
 
   addPitch(impulse) {
@@ -252,7 +252,6 @@ class EnemyShip {
 
   update(dt, playerPos) {
     if (this.isActive) {
-      this.updateWorldPos();
       this.updatePitch(dt);
       this.updateFloat(dt);
       this.updateHeading(dt, playerPos);
